@@ -10,7 +10,8 @@ import {
   Settings,
   BarChart3,
   GraduationCap,
-  UserCheck
+  UserCheck,
+  Award
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { clsx } from 'clsx';
@@ -26,7 +27,7 @@ const getNavigationItems = (role: string) => {
     student: [
       { name: 'Live Sessions', href: '/sessions', icon: Video },
       { name: 'Exams', href: '/exams', icon: FileText },
-      { name: 'Grades', href: '/grades', icon: BarChart3 },
+      { name: 'Grades', href: '/grades', icon: Award },
     ],
     instructor: [
       { name: 'Live Sessions', href: '/sessions', icon: Video },

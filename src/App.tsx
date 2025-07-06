@@ -6,6 +6,9 @@ import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { CoursesPage } from './pages/CoursesPage';
 import { LiveSessionsPage } from './pages/LiveSessionsPage';
+import { ExamsPage } from './pages/ExamsPage';
+import { GradesPage } from './pages/GradesPage';
+import { SchedulePage } from './pages/SchedulePage';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 
@@ -73,6 +76,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <LiveSessionsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/exams" 
+            element={
+              <ProtectedRoute>
+                <ExamsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/grades" 
+            element={
+              <ProtectedRoute>
+                <GradesPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/schedule" 
+            element={
+              <ProtectedRoute>
+                <SchedulePage />
               </ProtectedRoute>
             } 
           />

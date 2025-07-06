@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Video, Calendar, Users, Settings } from 'lucide-react';
+import { Plus, Video, Calendar, Users } from 'lucide-react';
 import { useLiveSessionStore } from '../stores/liveSessionStore';
 import { useAuthStore } from '../stores/authStore';
 import { LiveSession } from '../types';
@@ -8,7 +8,6 @@ import { Card } from '../components/ui/Card';
 import { SessionCard } from '../components/live-session/SessionCard';
 import { CreateSessionModal } from '../components/live-session/CreateSessionModal';
 import { JitsiMeetComponent } from '../components/live-session/JitsiMeetComponent';
-import { SimpleVideoCall } from '../components/live-session/SimpleVideoCall';
 
 export const LiveSessionsPage: React.FC = () => {
   const { user } = useAuthStore();
@@ -22,7 +21,6 @@ export const LiveSessionsPage: React.FC = () => {
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeSession, setActiveSession] = useState<LiveSession | null>(null);
-  const [videoProvider, setVideoProvider] = useState<'jitsi' | 'simple'>('simple');
 
   useEffect(() => {
     fetchSessions();
@@ -56,13 +54,8 @@ export const LiveSessionsPage: React.FC = () => {
   );
 
   if (activeSession) {
-    return videoProvider === 'jitsi' ? (
+    return (
       <JitsiMeetComponent 
-        session={activeSession} 
-        onClose={handleCloseSession} 
-      />
-    ) : (
-      <SimpleVideoCall 
         session={activeSession} 
         onClose={handleCloseSession} 
       />
@@ -82,17 +75,6 @@ export const LiveSessionsPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2">
-            <label className="text-sm text-gray-600">Video Provider:</label>
-            <select
-              value={videoProvider}
-              onChange={(e) => setVideoProvider(e.target.value as 'jitsi' | 'simple')}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="simple">Built-in Video</option>
-              <option value="jitsi">Jitsi Meet</option>
-            </select>
-          </div>
           {isInstructor && (
             <Button 
               variant="primary" 
