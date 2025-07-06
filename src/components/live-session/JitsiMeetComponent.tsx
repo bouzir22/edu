@@ -3,7 +3,7 @@ import { LiveSession } from '../../types';
 import { useAuthStore } from '../../stores/authStore';
 import { useLiveSessionStore } from '../../stores/liveSessionStore';
 import { Button } from '../ui/Button';
-import { X, Mic, MicOff, Video, VideoOff, Monitor, Users, Phone, AlertCircle } from 'lucide-react';
+import { X, Mic, MicOff, Video, VideoOff, Monitor, Users, Phone, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card } from '../ui/Card';
 
 interface JitsiMeetComponentProps {
@@ -28,9 +28,12 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [participantCount, setParticipantCount] = useState(session.participantCount || 0);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const maxRetries = 3;
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
 
     const loadJitsiScript = (): Promise<void> => {
       return new Promise((resolve, reject) => {
@@ -42,20 +45,35 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
         const script = document.createElement('script');
         script.src = 'https://meet.jit.si/external_api.js';
         script.async = true;
+        script.crossOrigin = 'anonymous';
+        
         script.onload = () => {
-          if (mounted) resolve();
+          if (mounted) {
+            // Wait a bit for the API to be fully available
+            setTimeout(() => {
+              if (window.JitsiMeetExternalAPI) {
+                resolve();
+              } else {
+                reject(new Error('Jitsi API not available after load'));
+              }
+            }, 500);
+          }
         };
+        
         script.onerror = () => {
-          if (mounted) reject(new Error('Failed to load Jitsi Meet API'));
+          if (mounted) {
+            reject(new Error('Failed to load Jitsi Meet script'));
+          }
         };
+        
         document.head.appendChild(script);
 
-        // Fallback timeout
-        setTimeout(() => {
-          if (mounted && !window.JitsiMeetExternalAPI) {
-            reject(new Error('Jitsi API load timeout'));
+        // Cleanup function to remove script if component unmounts
+        return () => {
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
           }
-        }, 10000);
+        };
       });
     };
 
@@ -74,7 +92,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
         jitsiContainerRef.current.innerHTML = '';
 
         const domain = 'meet.jit.si';
-        const roomName = `eduplatform-${session.roomName}-${session.id}`;
+        const roomName = `eduplatform-${session.roomName}-${session.id}`.replace(/[^a-zA-Z0-9-]/g, '');
         
         const options = {
           roomName: roomName,
@@ -91,21 +109,24 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
             enableEmailInStats: false,
             enableClosePage: false,
             disableDeepLinking: true,
-            disableInviteFunctions: false,
+            disableInviteFunctions: true,
             doNotStoreRoom: true,
             enableNoisyMicDetection: true,
             resolution: 720,
             constraints: {
               video: {
-                height: { ideal: 720, max: 720, min: 240 }
+                height: { ideal: 720, max: 720, min: 240 },
+                width: { ideal: 1280, max: 1280, min: 320 }
               }
             },
             disableSimulcast: false,
             enableLayerSuspension: true,
+            channelLastN: 20,
             p2p: {
               enabled: true,
               stunServers: [
-                { urls: 'stun:meet-jit-si-turnrelay.jitsi.net:443' }
+                { urls: 'stun:meet-jit-si-turnrelay.jitsi.net:443' },
+                { urls: 'stun:stun.l.google.com:19302' }
               ]
             },
             analytics: {
@@ -131,11 +152,13 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
               'filmstrip',
               'tileview',
               'select-background',
-              'download',
               'help',
               'mute-everyone',
               'security'
             ],
+            testing: {
+              enableFirefoxSimulcast: false
+            }
           },
           interfaceConfigOverwrite: {
             SHOW_JITSI_WATERMARK: false,
@@ -165,6 +188,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
             RANDOM_AVATAR_URL_SUFFIX: false,
             FILM_STRIP_MAX_HEIGHT: 90,
             ENABLE_MOBILE_BROWSER: true,
+            MOBILE_APP_PROMO: false
           },
           userInfo: {
             displayName: `${user.firstName} ${user.lastName}`,
@@ -174,14 +198,27 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
 
         if (!mounted) return;
 
+        console.log('Initializing Jitsi Meet with room:', roomName);
         apiRef.current = new window.JitsiMeetExternalAPI(domain, options);
 
+        // Set up connection timeout
+        timeoutId = setTimeout(() => {
+          if (mounted && !hasJoined) {
+            console.warn('Jitsi connection timeout');
+            setError('Connection timeout. The video service may be temporarily unavailable.');
+            setIsLoading(false);
+          }
+        }, 20000); // 20 second timeout
+
         // Event listeners
-        apiRef.current.addEventListener('videoConferenceJoined', () => {
+        apiRef.current.addEventListener('videoConferenceJoined', (event: any) => {
           if (!mounted) return;
+          console.log('Jitsi conference joined:', event);
+          clearTimeout(timeoutId);
           setIsLoading(false);
           setHasJoined(true);
           setError(null);
+          setConnectionAttempts(0);
           if (user) {
             joinSession(session.id, user.id);
           }
@@ -189,16 +226,19 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
 
         apiRef.current.addEventListener('videoConferenceLeft', () => {
           if (!mounted) return;
+          console.log('Jitsi conference left');
           handleLeaveSession();
         });
 
-        apiRef.current.addEventListener('participantJoined', () => {
+        apiRef.current.addEventListener('participantJoined', (event: any) => {
           if (!mounted) return;
+          console.log('Participant joined:', event);
           setParticipantCount(prev => prev + 1);
         });
 
-        apiRef.current.addEventListener('participantLeft', () => {
+        apiRef.current.addEventListener('participantLeft', (event: any) => {
           if (!mounted) return;
+          console.log('Participant left:', event);
           setParticipantCount(prev => Math.max(0, prev - 1));
         });
 
@@ -214,29 +254,38 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
 
         apiRef.current.addEventListener('readyToClose', () => {
           if (!mounted) return;
+          console.log('Jitsi ready to close');
           handleLeaveSession();
         });
 
         apiRef.current.addEventListener('videoConferenceError', (error: any) => {
           if (!mounted) return;
           console.error('Jitsi conference error:', error);
-          setError('Failed to join the video conference. Please try again.');
+          clearTimeout(timeoutId);
+          setError('Failed to connect to the video conference. Please try again.');
           setIsLoading(false);
         });
 
-        // Timeout fallback
-        setTimeout(() => {
-          if (mounted && isLoading) {
-            setIsLoading(false);
-            if (!hasJoined) {
-              setError('Connection timeout. Please check your internet connection and try again.');
-            }
-          }
-        }, 15000);
+        apiRef.current.addEventListener('connectionFailed', (error: any) => {
+          if (!mounted) return;
+          console.error('Jitsi connection failed:', error);
+          clearTimeout(timeoutId);
+          setError('Connection failed. Please check your internet connection and try again.');
+          setIsLoading(false);
+        });
+
+        apiRef.current.addEventListener('conferenceError', (error: any) => {
+          if (!mounted) return;
+          console.error('Jitsi conference error:', error);
+          clearTimeout(timeoutId);
+          setError('Conference error occurred. Please try again.');
+          setIsLoading(false);
+        });
 
       } catch (error) {
         if (!mounted) return;
         console.error('Failed to initialize Jitsi Meet:', error);
+        clearTimeout(timeoutId);
         setError('Failed to load video conference. Please refresh the page and try again.');
         setIsLoading(false);
       }
@@ -261,6 +310,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       if (apiRef.current) {
         try {
           apiRef.current.dispose();
@@ -270,7 +320,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
         apiRef.current = null;
       }
     };
-  }, [session.id, session.roomName, user, joinSession]);
+  }, [session.id, session.roomName, user, joinSession, connectionAttempts]);
 
   const handleLeaveSession = () => {
     if (user && hasJoined) {
@@ -288,7 +338,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
   };
 
   const toggleMute = () => {
-    if (apiRef.current) {
+    if (apiRef.current && hasJoined) {
       try {
         apiRef.current.executeCommand('toggleAudio');
       } catch (e) {
@@ -298,7 +348,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
   };
 
   const toggleVideo = () => {
-    if (apiRef.current) {
+    if (apiRef.current && hasJoined) {
       try {
         apiRef.current.executeCommand('toggleVideo');
       } catch (e) {
@@ -308,7 +358,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
   };
 
   const toggleScreenShare = () => {
-    if (apiRef.current) {
+    if (apiRef.current && hasJoined) {
       try {
         apiRef.current.executeCommand('toggleShareScreen');
       } catch (e) {
@@ -331,12 +381,34 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
   };
 
   const retryConnection = () => {
-    setError(null);
-    setIsLoading(true);
-    setHasJoined(false);
-    
-    // Reload the component
-    window.location.reload();
+    if (connectionAttempts < maxRetries) {
+      setConnectionAttempts(prev => prev + 1);
+      setError(null);
+      setIsLoading(true);
+      setHasJoined(false);
+      
+      // Clean up existing instance
+      if (apiRef.current) {
+        try {
+          apiRef.current.dispose();
+        } catch (e) {
+          console.warn('Error disposing API during retry:', e);
+        }
+        apiRef.current = null;
+      }
+      
+      // Force re-render to trigger useEffect
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      setError('Maximum retry attempts reached. Please try again later or use the built-in video option.');
+    }
+  };
+
+  const switchToBuiltIn = () => {
+    onClose();
+    // This would trigger the parent component to switch to SimpleVideoCall
   };
 
   if (error) {
@@ -347,13 +419,23 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
             <AlertCircle className="text-red-600" size={32} />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Connection Failed</h3>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <div className="flex space-x-3">
+          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-sm text-gray-500 mb-6">
+            Attempt {connectionAttempts + 1} of {maxRetries + 1}
+          </p>
+          <div className="flex flex-col space-y-3">
+            {connectionAttempts < maxRetries ? (
+              <Button variant="primary" onClick={retryConnection} fullWidth>
+                <RefreshCw className="mr-2" size={16} />
+                Try Again
+              </Button>
+            ) : (
+              <Button variant="primary" onClick={switchToBuiltIn} fullWidth>
+                Use Built-in Video
+              </Button>
+            )}
             <Button variant="outline" onClick={handleLeaveSession} fullWidth>
               Go Back
-            </Button>
-            <Button variant="primary" onClick={retryConnection} fullWidth>
-              Try Again
             </Button>
           </div>
         </Card>
@@ -439,7 +521,19 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
             <h3 className="text-lg font-semibold mb-2">Connecting to Session...</h3>
             <p className="text-gray-300">Loading {session.title}</p>
-            <p className="text-sm text-gray-400 mt-2">This may take a few moments</p>
+            <p className="text-sm text-gray-400 mt-2">
+              {connectionAttempts > 0 ? `Retry attempt ${connectionAttempts}...` : 'This may take a few moments'}
+            </p>
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={switchToBuiltIn}
+                className="text-white border-white hover:bg-white hover:text-gray-900"
+              >
+                Use Built-in Video Instead
+              </Button>
+            </div>
           </div>
         </div>
       )}
