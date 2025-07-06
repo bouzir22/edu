@@ -43,7 +43,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
         }
 
         const script = document.createElement('script');
-        script.src = 'https://meet.jit.si/external_api.js';
+        script.src = 'https://8x8.vc/vpaas-magic-cookie-60973f5de48144e0a1f53ed85c9d0ffd/external_api.js';
         script.async = true;
         script.crossOrigin = 'anonymous';
         
@@ -91,8 +91,8 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
         // Clear any existing content
         jitsiContainerRef.current.innerHTML = '';
 
-        const domain = 'meet.jit.si';
-        const roomName = `eduplatform-${session.roomName}-${session.id}`.replace(/[^a-zA-Z0-9-]/g, '');
+        const domain = '8x8.vc';
+        const roomName = `vpaas-magic-cookie-60973f5de48144e0a1f53ed85c9d0ffd/eduplatform-${session.roomName}-${session.id}`.replace(/[^a-zA-Z0-9-]/g, '');
         
         const options = {
           roomName: roomName,
@@ -134,8 +134,8 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
             },
             remoteVideoMenu: {
               disabled: false,
-              disableKick: true,
-              disableGrantModerator: true
+              disableKick: user?.role === 'instructor' ? false : true,
+              disableGrantModerator: user?.role === 'instructor' ? false : true
             },
             toolbarButtons: [
               'microphone',
@@ -153,8 +153,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
               'tileview',
               'select-background',
               'help',
-              'mute-everyone',
-              'security'
+              ...(user?.role === 'instructor' ? ['mute-everyone', 'security'] : [])
             ],
             testing: {
               enableFirefoxSimulcast: false
@@ -194,6 +193,8 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
             displayName: `${user.firstName} ${user.lastName}`,
             email: user.email,
           },
+          // Add JWT if you have premium features enabled
+          // jwt: "your-jwt-token-here"
         };
 
         if (!mounted) return;
