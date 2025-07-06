@@ -4,7 +4,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useLiveSessionStore } from '../../stores/liveSessionStore';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
-import { X, Mic, MicOff, Video, VideoOff, Users, Phone, MessageCircle } from 'lucide-react';
+import { X, Mic, MicOff, Video, VideoOff, Users, Phone, MessageCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface SimpleVideoCallProps {
   session: LiveSession;
@@ -21,6 +21,8 @@ export const SimpleVideoCall: React.FC<SimpleVideoCallProps> = ({ session, onClo
   const [messages, setMessages] = useState<Array<{id: string, user: string, message: string, time: string}>>([]);
   const [newMessage, setNewMessage] = useState('');
   const [showChat, setShowChat] = useState(false);
+  const [mediaAccessError, setMediaAccessError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -33,6 +35,9 @@ export const SimpleVideoCall: React.FC<SimpleVideoCallProps> = ({ session, onClo
 
   const initializeCall = async () => {
     try {
+      setMediaAccessError(null);
+      setIsRetrying(false);
+      
       // Get user media
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
@@ -54,9 +59,23 @@ export const SimpleVideoCall: React.FC<SimpleVideoCallProps> = ({ session, onClo
         setParticipantCount(prev => prev + Math.floor(Math.random() * 3) + 1);
       }, 2000);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to access camera/microphone:', error);
-      setIsConnected(true); // Continue without video
+      
+      let errorMessage = 'Unable to access camera or microphone';
+      
+      if (error.name === 'NotFoundError' || error.message.includes('Requested device not found')) {
+        errorMessage = 'No camera or microphone found. Please check that your devices are connected and try again.';
+      } else if (error.name === 'NotAllowedError') {
+        errorMessage = 'Camera and microphone access denied. Please allow access in your browser settings and try again.';
+      } else if (error.name === 'NotReadableError') {
+        errorMessage = 'Camera or microphone is already in use by another application. Please close other applications and try again.';
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage = 'Camera or microphone constraints cannot be satisfied. Please try again with different settings.';
+      }
+      
+      setMediaAccessError(errorMessage);
+      setIsConnected(false);
     }
   };
 
@@ -72,6 +91,11 @@ export const SimpleVideoCall: React.FC<SimpleVideoCallProps> = ({ session, onClo
   const handleLeaveCall = () => {
     cleanup();
     onClose();
+  };
+
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    await initializeCall();
   };
 
   const toggleMute = () => {
@@ -147,102 +171,152 @@ export const SimpleVideoCall: React.FC<SimpleVideoCallProps> = ({ session, onClo
       <div className="flex-1 flex">
         {/* Video Area */}
         <div className="flex-1 relative bg-gray-800">
-          {/* Main Video */}
-          <div className="w-full h-full flex items-center justify-center">
-            {isConnected ? (
-              <div className="relative w-full h-full max-w-4xl">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover rounded-lg"
-                />
-                {isVideoOff && (
-                  <div className="absolute inset-0 bg-gray-700 flex items-center justify-center rounded-lg">
-                    <div className="text-center text-white">
-                      <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                        <span className="text-xl font-semibold">
-                          {user?.firstName?.[0]}{user?.lastName?.[0]}
-                        </span>
-                      </div>
-                      <p className="text-sm">{user?.firstName} {user?.lastName}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
+          {/* Error State */}
+          {mediaAccessError && (
+            <div className="w-full h-full flex items-center justify-center">
+              <Card className="max-w-md mx-auto text-center p-8">
+                <div className="flex justify-center mb-4">
+                  <AlertCircle className="h-16 w-16 text-red-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  Media Access Error
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {mediaAccessError}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+                    variant="primary"
+                    onClick={handleRetry}
+                    disabled={isRetrying}
+                    className="flex items-center space-x-2"
+                  >
+                    {isRetrying ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Retrying...</span>
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={16} />
+                        <span>Try Again</span>
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={handleLeaveCall}
+                  >
+                    Go Back
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {!mediaAccessError && !isConnected && (
+            <div className="w-full h-full flex items-center justify-center">
               <div className="text-center text-white">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
                 <p>Connecting to video call...</p>
               </div>
-            )}
-          </div>
-
-          {/* Participant Thumbnails */}
-          <div className="absolute bottom-4 right-4 flex space-x-2">
-            {[...Array(Math.min(participantCount - 1, 3))].map((_, index) => (
-              <div key={index} className="w-24 h-18 bg-gray-700 rounded-lg flex items-center justify-center">
-                <div className="text-white text-xs text-center">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-1">
-                    <span className="text-xs">P{index + 1}</span>
-                  </div>
-                  <p className="text-xs">Participant {index + 1}</p>
-                </div>
-              </div>
-            ))}
-            {participantCount > 4 && (
-              <div className="w-24 h-18 bg-gray-700 rounded-lg flex items-center justify-center">
-                <div className="text-white text-xs text-center">
-                  <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-1">
-                    <span className="text-xs">+{participantCount - 4}</span>
-                  </div>
-                  <p className="text-xs">More</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Controls */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-            <div className="flex items-center space-x-4 bg-gray-800 bg-opacity-90 rounded-full px-6 py-3">
-              <Button
-                variant={isMuted ? "danger" : "secondary"}
-                size="sm"
-                onClick={toggleMute}
-                className="rounded-full w-12 h-12"
-              >
-                {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
-              </Button>
-              
-              <Button
-                variant={isVideoOff ? "danger" : "secondary"}
-                size="sm"
-                onClick={toggleVideo}
-                className="rounded-full w-12 h-12"
-              >
-                {isVideoOff ? <VideoOff size={20} /> : <Video size={20} />}
-              </Button>
-              
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowChat(!showChat)}
-                className="rounded-full w-12 h-12"
-              >
-                <MessageCircle size={20} />
-              </Button>
-              
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleLeaveCall}
-                className="rounded-full w-12 h-12"
-              >
-                <Phone size={20} />
-              </Button>
             </div>
-          </div>
+          )}
+
+          {/* Main Video */}
+          {!mediaAccessError && isConnected && (
+            <>
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="relative w-full h-full max-w-4xl">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                  {isVideoOff && (
+                    <div className="absolute inset-0 bg-gray-700 flex items-center justify-center rounded-lg">
+                      <div className="text-center text-white">
+                        <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <span className="text-xl font-semibold">
+                            {user?.firstName?.[0]}{user?.lastName?.[0]}
+                          </span>
+                        </div>
+                        <p className="text-sm">{user?.firstName} {user?.lastName}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Participant Thumbnails */}
+              <div className="absolute bottom-4 right-4 flex space-x-2">
+                {[...Array(Math.min(participantCount - 1, 3))].map((_, index) => (
+                  <div key={index} className="w-24 h-18 bg-gray-700 rounded-lg flex items-center justify-center">
+                    <div className="text-white text-xs text-center">
+                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-1">
+                        <span className="text-xs">P{index + 1}</span>
+                      </div>
+                      <p className="text-xs">Participant {index + 1}</p>
+                    </div>
+                  </div>
+                ))}
+                {participantCount > 4 && (
+                  <div className="w-24 h-18 bg-gray-700 rounded-lg flex items-center justify-center">
+                    <div className="text-white text-xs text-center">
+                      <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-1">
+                        <span className="text-xs">+{participantCount - 4}</span>
+                      </div>
+                      <p className="text-xs">More</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Controls */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                <div className="flex items-center space-x-4 bg-gray-800 bg-opacity-90 rounded-full px-6 py-3">
+                  <Button
+                    variant={isMuted ? "danger" : "secondary"}
+                    size="sm"
+                    onClick={toggleMute}
+                    className="rounded-full w-12 h-12"
+                  >
+                    {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
+                  </Button>
+                  
+                  <Button
+                    variant={isVideoOff ? "danger" : "secondary"}
+                    size="sm"
+                    onClick={toggleVideo}
+                    className="rounded-full w-12 h-12"
+                  >
+                    {isVideoOff ? <VideoOff size={20} /> : <Video size={20} />}
+                  </Button>
+                  
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowChat(!showChat)}
+                    className="rounded-full w-12 h-12"
+                  >
+                    <MessageCircle size={20} />
+                  </Button>
+                  
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={handleLeaveCall}
+                    className="rounded-full w-12 h-12"
+                  >
+                    <Phone size={20} />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Chat Sidebar */}
