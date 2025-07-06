@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { JaaSMeeting } from '@jitsi/react-sdk';
 import { LiveSession } from '../../types';
 import { useAuthStore } from '../../stores/authStore';
 import { useLiveSessionStore } from '../../stores/liveSessionStore';
 import { Button } from '../ui/Button';
-import { X, Mic, MicOff, Video, VideoOff, Monitor, Users, Phone, AlertCircle, RefreshCw } from 'lucide-react';
+import { X, Users, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card } from '../ui/Card';
 
 interface JitsiMeetComponentProps {
@@ -11,374 +12,61 @@ interface JitsiMeetComponentProps {
   onClose: () => void;
 }
 
-declare global {
-  interface Window {
-    JitsiMeetExternalAPI: any;
-  }
-}
-
 export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session, onClose }) => {
   const { user } = useAuthStore();
   const { joinSession, leaveSession } = useLiveSessionStore();
-  const jitsiContainerRef = useRef<HTMLDivElement>(null);
-  const apiRef = useRef<any>(null);
   const [hasJoined, setHasJoined] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
   const [participantCount, setParticipantCount] = useState(session.participantCount || 0);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const maxRetries = 3;
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
 
-    const loadJitsiScript = (): Promise<void> => {
-      return new Promise((resolve, reject) => {
-        if (window.JitsiMeetExternalAPI) {
-          resolve();
-          return;
-        }
-
-        const script = document.createElement('script');
-        script.src = 'https://8x8.vc/vpaas-magic-cookie-60973f5de48144e0a1f53ed85c9d0ffd/external_api.js';
-        script.async = true;
-        script.crossOrigin = 'anonymous';
-        
-        script.onload = () => {
-          if (mounted) {
-            // Wait a bit for the API to be fully available
-            setTimeout(() => {
-              if (window.JitsiMeetExternalAPI) {
-                resolve();
-              } else {
-                reject(new Error('Jitsi API not available after load'));
-              }
-            }, 500);
-          }
-        };
-        
-        script.onerror = () => {
-          if (mounted) {
-            reject(new Error('Failed to load Jitsi Meet script'));
-          }
-        };
-        
-        document.head.appendChild(script);
-
-        // Cleanup function to remove script if component unmounts
-        return () => {
-          if (script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-        };
-      });
-    };
-
-    const initializeJitsi = async () => {
-      if (!mounted) return;
+    const initializeSession = async () => {
+      if (!mounted || !user) return;
 
       try {
         setIsLoading(true);
         setError(null);
-
-        await loadJitsiScript();
         
-        if (!jitsiContainerRef.current || !user || !mounted) return;
-
-        // Clear any existing content
-        jitsiContainerRef.current.innerHTML = '';
-
-        const domain = '8x8.vc';
-        const roomName = `vpaas-magic-cookie-60973f5de48144e0a1f53ed85c9d0ffd/eduplatform-${session.roomName}-${session.id}`.replace(/[^a-zA-Z0-9-]/g, '');
+        // Join the session in our backend
+        await joinSession(session.id, user.id);
+        setHasJoined(true);
         
-        const options = {
-          roomName: roomName,
-          width: '100%',
-          height: '100%',
-          parentNode: jitsiContainerRef.current,
-          configOverwrite: {
-            startWithAudioMuted: false,
-            startWithVideoMuted: false,
-            enableWelcomePage: false,
-            prejoinPageEnabled: false,
-            disableModeratorIndicator: false,
-            startScreenSharing: false,
-            enableEmailInStats: false,
-            enableClosePage: false,
-            disableDeepLinking: true,
-            disableInviteFunctions: true,
-            doNotStoreRoom: true,
-            enableNoisyMicDetection: true,
-            resolution: 720,
-            constraints: {
-              video: {
-                height: { ideal: 720, max: 720, min: 240 },
-                width: { ideal: 1280, max: 1280, min: 320 }
-              }
-            },
-            disableSimulcast: false,
-            enableLayerSuspension: true,
-            channelLastN: 20,
-            p2p: {
-              enabled: true,
-              stunServers: [
-                { urls: 'stun:meet-jit-si-turnrelay.jitsi.net:443' },
-                { urls: 'stun:stun.l.google.com:19302' }
-              ]
-            },
-            analytics: {
-              disabled: true
-            },
-            remoteVideoMenu: {
-              disabled: false,
-              disableKick: user?.role === 'instructor' ? false : true,
-              disableGrantModerator: user?.role === 'instructor' ? false : true
-            },
-            toolbarButtons: [
-              'microphone',
-              'camera',
-              'closedcaptions',
-              'desktop',
-              'fullscreen',
-              'fodeviceselection',
-              'hangup',
-              'profile',
-              'chat',
-              'raisehand',
-              'videoquality',
-              'filmstrip',
-              'tileview',
-              'select-background',
-              'help',
-              ...(user?.role === 'instructor' ? ['mute-everyone', 'security'] : [])
-            ],
-            testing: {
-              enableFirefoxSimulcast: false
-            }
-          },
-          interfaceConfigOverwrite: {
-            SHOW_JITSI_WATERMARK: false,
-            SHOW_WATERMARK_FOR_GUESTS: false,
-            SHOW_BRAND_WATERMARK: false,
-            BRAND_WATERMARK_LINK: '',
-            SHOW_POWERED_BY: false,
-            DISPLAY_WELCOME_PAGE_CONTENT: false,
-            DISPLAY_WELCOME_PAGE_TOOLBAR_ADDITIONAL_CONTENT: false,
-            APP_NAME: 'EduPlatform',
-            NATIVE_APP_NAME: 'EduPlatform',
-            PROVIDER_NAME: 'EduPlatform',
-            LANG_DETECTION: true,
-            CONNECTION_INDICATOR_AUTO_HIDE_ENABLED: true,
-            CONNECTION_INDICATOR_AUTO_HIDE_TIMEOUT: 5000,
-            MAXIMUM_ZOOMING_COEFFICIENT: 1.3,
-            FILM_STRIP_MAX_HEIGHT: 120,
-            ENABLE_FEEDBACK_ANIMATION: false,
-            DISABLE_VIDEO_BACKGROUND: false,
-            DISABLE_BLUR: false,
-            VIDEO_LAYOUT_FIT: 'both',
-            TILE_VIEW_MAX_COLUMNS: 5,
-            VERTICAL_FILMSTRIP: true,
-            CLOSE_PAGE_GUEST_HINT: false,
-            SHOW_PROMOTIONAL_CLOSE_PAGE: false,
-            RANDOM_AVATAR_URL_PREFIX: false,
-            RANDOM_AVATAR_URL_SUFFIX: false,
-            FILM_STRIP_MAX_HEIGHT: 90,
-            ENABLE_MOBILE_BROWSER: true,
-            MOBILE_APP_PROMO: false
-          },
-          userInfo: {
-            displayName: `${user.firstName} ${user.lastName}`,
-            email: user.email,
-          },
-          // Add JWT if you have premium features enabled
-          // jwt: "your-jwt-token-here"
-        };
-
-        if (!mounted) return;
-
-        console.log('Initializing Jitsi Meet with room:', roomName);
-        apiRef.current = new window.JitsiMeetExternalAPI(domain, options);
-
-        // Set up connection timeout
-        timeoutId = setTimeout(() => {
-          if (mounted && !hasJoined) {
-            console.warn('Jitsi connection timeout');
-            setError('Connection timeout. The video service may be temporarily unavailable.');
+        // Small delay to ensure everything is ready
+        setTimeout(() => {
+          if (mounted) {
             setIsLoading(false);
           }
-        }, 20000); // 20 second timeout
-
-        // Event listeners
-        apiRef.current.addEventListener('videoConferenceJoined', (event: any) => {
-          if (!mounted) return;
-          console.log('Jitsi conference joined:', event);
-          clearTimeout(timeoutId);
-          setIsLoading(false);
-          setHasJoined(true);
-          setError(null);
-          setConnectionAttempts(0);
-          if (user) {
-            joinSession(session.id, user.id);
-          }
-        });
-
-        apiRef.current.addEventListener('videoConferenceLeft', () => {
-          if (!mounted) return;
-          console.log('Jitsi conference left');
-          handleLeaveSession();
-        });
-
-        apiRef.current.addEventListener('participantJoined', (event: any) => {
-          if (!mounted) return;
-          console.log('Participant joined:', event);
-          setParticipantCount(prev => prev + 1);
-        });
-
-        apiRef.current.addEventListener('participantLeft', (event: any) => {
-          if (!mounted) return;
-          console.log('Participant left:', event);
-          setParticipantCount(prev => Math.max(0, prev - 1));
-        });
-
-        apiRef.current.addEventListener('audioMuteStatusChanged', (event: any) => {
-          if (!mounted) return;
-          setIsMuted(event.muted);
-        });
-
-        apiRef.current.addEventListener('videoMuteStatusChanged', (event: any) => {
-          if (!mounted) return;
-          setIsVideoOff(event.muted);
-        });
-
-        apiRef.current.addEventListener('readyToClose', () => {
-          if (!mounted) return;
-          console.log('Jitsi ready to close');
-          handleLeaveSession();
-        });
-
-        apiRef.current.addEventListener('videoConferenceError', (error: any) => {
-          if (!mounted) return;
-          console.error('Jitsi conference error:', error);
-          clearTimeout(timeoutId);
-          setError('Failed to connect to the video conference. Please try again.');
-          setIsLoading(false);
-        });
-
-        apiRef.current.addEventListener('connectionFailed', (error: any) => {
-          if (!mounted) return;
-          console.error('Jitsi connection failed:', error);
-          clearTimeout(timeoutId);
-          setError('Connection failed. Please check your internet connection and try again.');
-          setIsLoading(false);
-        });
-
-        apiRef.current.addEventListener('conferenceError', (error: any) => {
-          if (!mounted) return;
-          console.error('Jitsi conference error:', error);
-          clearTimeout(timeoutId);
-          setError('Conference error occurred. Please try again.');
-          setIsLoading(false);
-        });
-
+        }, 1000);
+        
       } catch (error) {
-        if (!mounted) return;
-        console.error('Failed to initialize Jitsi Meet:', error);
-        clearTimeout(timeoutId);
-        setError('Failed to load video conference. Please refresh the page and try again.');
-        setIsLoading(false);
-      }
-    };
-
-    const handleLeaveSession = () => {
-      if (user && hasJoined) {
-        leaveSession(session.id, user.id);
-      }
-      if (apiRef.current) {
-        try {
-          apiRef.current.dispose();
-        } catch (e) {
-          console.warn('Error disposing Jitsi API:', e);
+        if (mounted) {
+          console.error('Failed to initialize session:', error);
+          setError('Failed to join the session. Please try again.');
+          setIsLoading(false);
         }
-        apiRef.current = null;
       }
-      onClose();
     };
 
-    initializeJitsi();
+    initializeSession();
 
     return () => {
       mounted = false;
-      clearTimeout(timeoutId);
-      if (apiRef.current) {
-        try {
-          apiRef.current.dispose();
-        } catch (e) {
-          console.warn('Error disposing Jitsi API on cleanup:', e);
-        }
-        apiRef.current = null;
+      if (hasJoined && user) {
+        leaveSession(session.id, user.id);
       }
     };
-  }, [session.id, session.roomName, user, joinSession, connectionAttempts]);
+  }, [session.id, user, joinSession, connectionAttempts]);
 
   const handleLeaveSession = () => {
     if (user && hasJoined) {
       leaveSession(session.id, user.id);
     }
-    if (apiRef.current) {
-      try {
-        apiRef.current.dispose();
-      } catch (e) {
-        console.warn('Error disposing Jitsi API:', e);
-      }
-      apiRef.current = null;
-    }
     onClose();
-  };
-
-  const toggleMute = () => {
-    if (apiRef.current && hasJoined) {
-      try {
-        apiRef.current.executeCommand('toggleAudio');
-      } catch (e) {
-        console.warn('Error toggling audio:', e);
-      }
-    }
-  };
-
-  const toggleVideo = () => {
-    if (apiRef.current && hasJoined) {
-      try {
-        apiRef.current.executeCommand('toggleVideo');
-      } catch (e) {
-        console.warn('Error toggling video:', e);
-      }
-    }
-  };
-
-  const toggleScreenShare = () => {
-    if (apiRef.current && hasJoined) {
-      try {
-        apiRef.current.executeCommand('toggleShareScreen');
-      } catch (e) {
-        console.warn('Error toggling screen share:', e);
-      }
-    }
-  };
-
-  const hangUp = () => {
-    if (apiRef.current) {
-      try {
-        apiRef.current.executeCommand('hangup');
-      } catch (e) {
-        console.warn('Error hanging up:', e);
-        handleLeaveSession();
-      }
-    } else {
-      handleLeaveSession();
-    }
   };
 
   const retryConnection = () => {
@@ -387,21 +75,6 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
       setError(null);
       setIsLoading(true);
       setHasJoined(false);
-      
-      // Clean up existing instance
-      if (apiRef.current) {
-        try {
-          apiRef.current.dispose();
-        } catch (e) {
-          console.warn('Error disposing API during retry:', e);
-        }
-        apiRef.current = null;
-      }
-      
-      // Force re-render to trigger useEffect
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
     } else {
       setError('Maximum retry attempts reached. Please try again later or use the built-in video option.');
     }
@@ -409,7 +82,152 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
 
   const switchToBuiltIn = () => {
     onClose();
-    // This would trigger the parent component to switch to SimpleVideoCall
+  };
+
+  // Event handlers for Jitsi events
+  const handleApiReady = () => {
+    console.log('Jitsi API is ready');
+    setIsLoading(false);
+    setError(null);
+    setConnectionAttempts(0);
+  };
+
+  const handleReadyToClose = () => {
+    console.log('Jitsi ready to close');
+    handleLeaveSession();
+  };
+
+  const handleParticipantJoined = (participant: any) => {
+    console.log('Participant joined:', participant);
+    setParticipantCount(prev => prev + 1);
+  };
+
+  const handleParticipantLeft = (participant: any) => {
+    console.log('Participant left:', participant);
+    setParticipantCount(prev => Math.max(0, prev - 1));
+  };
+
+  const handleVideoConferenceJoined = (participant: any) => {
+    console.log('Video conference joined:', participant);
+    setHasJoined(true);
+    setIsLoading(false);
+  };
+
+  const handleVideoConferenceLeft = () => {
+    console.log('Video conference left');
+    handleLeaveSession();
+  };
+
+  const handleError = (error: any) => {
+    console.error('Jitsi error:', error);
+    setError('Connection failed. Please check your internet connection and try again.');
+    setIsLoading(false);
+  };
+
+  // Generate room name with VPaaS prefix
+  const roomName = `eduplatform-${session.roomName}-${session.id}`.replace(/[^a-zA-Z0-9-]/g, '');
+  
+  // App ID from your VPaaS magic cookie
+  const appId = 'vpaas-magic-cookie-60973f5de48144e0a1f53ed85c9d0ffd';
+
+  // Configuration overrides
+  const configOverwrite = {
+    startWithAudioMuted: false,
+    startWithVideoMuted: false,
+    enableWelcomePage: false,
+    prejoinPageEnabled: false,
+    disableModeratorIndicator: false,
+    startScreenSharing: false,
+    enableEmailInStats: false,
+    enableClosePage: false,
+    disableDeepLinking: true,
+    disableInviteFunctions: true,
+    doNotStoreRoom: true,
+    enableNoisyMicDetection: true,
+    resolution: 720,
+    constraints: {
+      video: {
+        height: { ideal: 720, max: 720, min: 240 },
+        width: { ideal: 1280, max: 1280, min: 320 }
+      }
+    },
+    disableSimulcast: false,
+    enableLayerSuspension: true,
+    channelLastN: 20,
+    p2p: {
+      enabled: true,
+      stunServers: [
+        { urls: 'stun:meet-jit-si-turnrelay.jitsi.net:443' },
+        { urls: 'stun:stun.l.google.com:19302' }
+      ]
+    },
+    analytics: {
+      disabled: true
+    },
+    remoteVideoMenu: {
+      disabled: false,
+      disableKick: user?.role === 'instructor' ? false : true,
+      disableGrantModerator: user?.role === 'instructor' ? false : true
+    },
+    toolbarButtons: [
+      'microphone',
+      'camera',
+      'closedcaptions',
+      'desktop',
+      'fullscreen',
+      'fodeviceselection',
+      'hangup',
+      'profile',
+      'chat',
+      'raisehand',
+      'videoquality',
+      'filmstrip',
+      'tileview',
+      'select-background',
+      'help',
+      ...(user?.role === 'instructor' ? ['mute-everyone', 'security'] : [])
+    ],
+    testing: {
+      enableFirefoxSimulcast: false
+    }
+  };
+
+  // Interface configuration
+  const interfaceConfigOverwrite = {
+    SHOW_JITSI_WATERMARK: false,
+    SHOW_WATERMARK_FOR_GUESTS: false,
+    SHOW_BRAND_WATERMARK: false,
+    BRAND_WATERMARK_LINK: '',
+    SHOW_POWERED_BY: false,
+    DISPLAY_WELCOME_PAGE_CONTENT: false,
+    DISPLAY_WELCOME_PAGE_TOOLBAR_ADDITIONAL_CONTENT: false,
+    APP_NAME: 'EduPlatform',
+    NATIVE_APP_NAME: 'EduPlatform',
+    PROVIDER_NAME: 'EduPlatform',
+    LANG_DETECTION: true,
+    CONNECTION_INDICATOR_AUTO_HIDE_ENABLED: true,
+    CONNECTION_INDICATOR_AUTO_HIDE_TIMEOUT: 5000,
+    MAXIMUM_ZOOMING_COEFFICIENT: 1.3,
+    FILM_STRIP_MAX_HEIGHT: 120,
+    ENABLE_FEEDBACK_ANIMATION: false,
+    DISABLE_VIDEO_BACKGROUND: false,
+    DISABLE_BLUR: false,
+    VIDEO_LAYOUT_FIT: 'both',
+    TILE_VIEW_MAX_COLUMNS: 5,
+    VERTICAL_FILMSTRIP: true,
+    CLOSE_PAGE_GUEST_HINT: false,
+    SHOW_PROMOTIONAL_CLOSE_PAGE: false,
+    RANDOM_AVATAR_URL_PREFIX: false,
+    RANDOM_AVATAR_URL_SUFFIX: false,
+    FILM_STRIP_MAX_HEIGHT: 90,
+    ENABLE_MOBILE_BROWSER: true,
+    MOBILE_APP_PROMO: false
+  };
+
+  // User info
+  const userInfo = {
+    displayName: `${user?.firstName} ${user?.lastName}`,
+    email: user?.email,
   };
 
   if (error) {
@@ -463,56 +281,14 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
-          {!isLoading && hasJoined && (
-            <>
-              <Button
-                variant={isMuted ? "danger" : "secondary"}
-                size="sm"
-                onClick={toggleMute}
-                className="text-white"
-              >
-                {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
-              </Button>
-              
-              <Button
-                variant={isVideoOff ? "danger" : "secondary"}
-                size="sm"
-                onClick={toggleVideo}
-                className="text-white"
-              >
-                {isVideoOff ? <VideoOff size={16} /> : <Video size={16} />}
-              </Button>
-              
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={toggleScreenShare}
-                className="text-white"
-              >
-                <Monitor size={16} />
-              </Button>
-              
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={hangUp}
-                className="text-white"
-              >
-                <Phone size={16} />
-              </Button>
-            </>
-          )}
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLeaveSession}
-            className="text-white hover:bg-gray-800"
-          >
-            <X size={16} />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLeaveSession}
+          className="text-white hover:bg-gray-800"
+        >
+          <X size={16} />
+        </Button>
       </div>
 
       {/* Loading State */}
@@ -539,12 +315,31 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
         </div>
       )}
 
-      {/* Jitsi Meet Container */}
-      <div 
-        ref={jitsiContainerRef} 
-        className="flex-1 w-full h-full bg-gray-800"
-        style={{ minHeight: 'calc(100vh - 80px)' }}
-      />
+      {/* Jitsi Meeting Container */}
+      <div className="flex-1 w-full h-full bg-gray-800" style={{ minHeight: 'calc(100vh - 80px)' }}>
+        <JaaSMeeting
+          appId={appId}
+          roomName={roomName}
+          configOverwrite={configOverwrite}
+          interfaceConfigOverwrite={interfaceConfigOverwrite}
+          userInfo={userInfo}
+          onApiReady={handleApiReady}
+          onReadyToClose={handleReadyToClose}
+          onParticipantJoined={handleParticipantJoined}
+          onParticipantLeft={handleParticipantLeft}
+          onVideoConferenceJoined={handleVideoConferenceJoined}
+          onVideoConferenceLeft={handleVideoConferenceLeft}
+          onError={handleError}
+          getIFrameRef={(node) => {
+            if (node) {
+              node.style.height = '100%';
+              node.style.width = '100%';
+            }
+          }}
+          // Add JWT if you have premium features enabled
+          // jwt="your-jwt-token-here"
+        />
+      </div>
     </div>
   );
 };
