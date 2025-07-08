@@ -1,10 +1,13 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bell, User, LogOut, Settings } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { Button } from '../ui/Button';
+import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 
 export const Header: React.FC = () => {
   const { user, logout } = useAuthStore();
+  const { t } = useTranslation();
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -12,7 +15,14 @@ export const Header: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-gray-900">EduPlatform</h1>
+              <div className="flex items-center space-x-3">
+                <img 
+                  src="/OU-S-Logo.svg" 
+                  alt={t('university.shortName')} 
+                  className="h-8 w-auto"
+                />
+                <h1 className="text-xl font-bold text-gray-900">{t('university.shortName')}</h1>
+              </div>
             </div>
           </div>
 
@@ -31,11 +41,15 @@ export const Header: React.FC = () => {
                   <p className="text-sm font-medium text-gray-900">
                     {user?.firstName} {user?.lastName}
                   </p>
-                  <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                  <p className="text-xs text-gray-500 capitalize">
+                    {user?.role === 'student' ? t('auth.student') : 
+                     user?.role === 'instructor' ? t('auth.instructor') : user?.role}
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-center space-x-2">
+                <LanguageSwitcher />
                 <Button variant="ghost" size="sm">
                   <Settings size={16} />
                 </Button>

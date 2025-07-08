@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 import { 
   Home, 
@@ -18,28 +19,28 @@ import { clsx } from 'clsx';
 
 const getNavigationItems = (role: string) => {
   const commonItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home },
-    { name: 'Courses', href: '/courses', icon: BookOpen },
-    { name: 'Schedule', href: '/schedule', icon: Calendar },
+    { name: 'navigation.dashboard', href: '/dashboard', icon: Home },
+    { name: 'navigation.courses', href: '/courses', icon: BookOpen },
+    { name: 'navigation.schedule', href: '/schedule', icon: Calendar },
   ];
 
   const roleSpecificItems = {
     student: [
-      { name: 'Live Sessions', href: '/sessions', icon: Video },
-      { name: 'Exams', href: '/exams', icon: FileText },
-      { name: 'Grades', href: '/grades', icon: Award },
+      { name: 'navigation.liveSessions', href: '/sessions', icon: Video },
+      { name: 'navigation.exams', href: '/exams', icon: FileText },
+      { name: 'navigation.grades', href: '/grades', icon: Award },
     ],
     instructor: [
-      { name: 'Live Sessions', href: '/sessions', icon: Video },
-      { name: 'Exams', href: '/exams', icon: FileText },
-      { name: 'Students', href: '/students', icon: GraduationCap },
-      { name: 'Grades', href: '/grades', icon: BarChart3 },
+      { name: 'navigation.liveSessions', href: '/sessions', icon: Video },
+      { name: 'navigation.exams', href: '/exams', icon: FileText },
+      { name: 'navigation.students', href: '/students', icon: GraduationCap },
+      { name: 'navigation.grades', href: '/grades', icon: BarChart3 },
     ],
     admin: [
-      { name: 'Users', href: '/users', icon: Users },
-      { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-      { name: 'Approvals', href: '/approvals', icon: UserCheck },
-      { name: 'Settings', href: '/settings', icon: Settings },
+      { name: 'navigation.users', href: '/users', icon: Users },
+      { name: 'navigation.analytics', href: '/analytics', icon: BarChart3 },
+      { name: 'navigation.approvals', href: '/approvals', icon: UserCheck },
+      { name: 'navigation.settings', href: '/settings', icon: Settings },
     ],
   };
 
@@ -48,6 +49,7 @@ const getNavigationItems = (role: string) => {
 
 export const Sidebar: React.FC = () => {
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   
   if (!user) return null;
 
@@ -57,10 +59,12 @@ export const Sidebar: React.FC = () => {
     <div className="w-64 bg-gray-900 text-white min-h-screen">
       <div className="p-6">
         <div className="flex items-center space-x-2 mb-8">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <BookOpen size={20} />
-          </div>
-          <span className="text-xl font-bold">EduPlatform</span>
+          <img 
+            src="/OU-S-Logo.svg" 
+            alt={t('university.shortName')} 
+            className="h-8 w-auto filter brightness-0 invert"
+          />
+          <span className="text-xl font-bold">{t('university.shortName')}</span>
         </div>
 
         <nav className="space-y-2">
@@ -78,7 +82,7 @@ export const Sidebar: React.FC = () => {
               }
             >
               <item.icon size={18} />
-              <span>{item.name}</span>
+              <span>{t(item.name)}</span>
             </NavLink>
           ))}
         </nav>

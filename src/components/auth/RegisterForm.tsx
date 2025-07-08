@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,17 +9,6 @@ import { Input } from '../ui/Input';
 import { Card } from '../ui/Card';
 import { toast } from 'react-hot-toast';
 
-const registerSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string(),
-  role: z.enum(['student', 'instructor']),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
@@ -28,7 +18,20 @@ interface RegisterFormProps {
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const { register: registerUser, isLoading } = useAuthStore();
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
+
+  const registerSchema = z.object({
+    firstName: z.string().min(2, t('auth.validation.firstNameMinLength')),
+    lastName: z.string().min(2, t('auth.validation.lastNameMinLength')),
+    email: z.string().email(t('auth.validation.emailInvalid')),
+    password: z.string().min(6, t('auth.validation.passwordMinLength')),
+    confirmPassword: z.string(),
+    role: z.enum(['student', 'instructor']),
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: t('auth.validation.passwordsNotMatch'),
+    path: ['confirmPassword'],
+  });
 
   const {
     register,
@@ -44,45 +47,45 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   const onSubmit = async (data: RegisterFormData) => {
     try {
       await registerUser(data.email, data.password, data.firstName, data.lastName, data.role);
-      toast.success('Registration successful!');
+      toast.success(t('auth.registrationSuccessful'));
     } catch (error) {
-      toast.error('Registration failed. Please try again.');
+      toast.error(t('auth.registrationFailed'));
     }
   };
 
   return (
     <Card className="w-full max-w-md mx-auto">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
-        <p className="text-gray-600 mt-2">Join our education platform</p>
+        <h2 className="text-2xl font-bold text-gray-900">{t('auth.createAccount')}</h2>
+        <p className="text-gray-600 mt-2">{t('auth.joinPlatform')}</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <Input
-            label="First Name"
-            placeholder="Enter your first name"
+            label={t('auth.firstName')}
+            placeholder={t('auth.firstName')}
             {...register('firstName')}
             error={errors.firstName?.message}
           />
           <Input
-            label="Last Name"
-            placeholder="Enter your last name"
+            label={t('auth.lastName')}
+            placeholder={t('auth.lastName')}
             {...register('lastName')}
             error={errors.lastName?.message}
           />
         </div>
 
         <Input
-          label="Email"
+          label={t('auth.email')}
           type="email"
-          placeholder="Enter your email"
+          placeholder={t('auth.email')}
           {...register('email')}
           error={errors.email?.message}
         />
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Role</label>
+          <label className="block text-sm font-medium text-gray-700">{t('auth.role')}</label>
           <div className="grid grid-cols-2 gap-2">
             <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
               <input
@@ -91,7 +94,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 {...register('role')}
                 className="mr-2"
               />
-              <span className="text-sm">Student</span>
+              <span className="text-sm">{t('auth.student')}</span>
             </label>
             <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
               <input
@@ -100,23 +103,23 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 {...register('role')}
                 className="mr-2"
               />
-              <span className="text-sm">Instructor</span>
+              <span className="text-sm">{t('auth.instructor')}</span>
             </label>
           </div>
         </div>
 
         <Input
-          label="Password"
+          label={t('auth.password')}
           type={showPassword ? 'text' : 'password'}
-          placeholder="Enter your password"
+          placeholder={t('auth.password')}
           {...register('password')}
           error={errors.password?.message}
         />
 
         <Input
-          label="Confirm Password"
+          label={t('auth.confirmPassword')}
           type={showPassword ? 'text' : 'password'}
-          placeholder="Confirm your password"
+          placeholder={t('auth.confirmPassword')}
           {...register('confirmPassword')}
           error={errors.confirmPassword?.message}
         />
@@ -130,7 +133,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
           />
           <label htmlFor="showPassword" className="ml-2 text-sm text-gray-600">
-            Show password
+            {t('auth.showPassword')}
           </label>
         </div>
 
@@ -141,7 +144,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           fullWidth
           isLoading={isLoading}
         >
-          Create Account
+          {t('auth.signUp')}
         </Button>
 
         <div className="text-center">
@@ -150,7 +153,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             onClick={onSwitchToLogin}
             className="text-sm text-blue-600 hover:text-blue-800"
           >
-            Already have an account? Sign in
+            {t('auth.alreadyHaveAccount')}
           </button>
         </div>
       </form>

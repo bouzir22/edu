@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,10 +9,6 @@ import { Input } from '../ui/Input';
 import { Card } from '../ui/Card';
 import { toast } from 'react-hot-toast';
 
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
@@ -21,7 +18,13 @@ interface LoginFormProps {
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const { login, isLoading } = useAuthStore();
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
+
+  const loginSchema = z.object({
+    email: z.string().email(t('auth.validation.emailInvalid')),
+    password: z.string().min(6, t('auth.validation.passwordMinLength')),
+  });
 
   const {
     register,
@@ -34,32 +37,32 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data.email, data.password);
-      toast.success('Login successful!');
+      toast.success(t('auth.loginSuccessful'));
     } catch (error) {
-      toast.error('Login failed. Please check your credentials.');
+      toast.error(t('auth.loginFailed'));
     }
   };
 
   return (
     <Card className="w-full max-w-md mx-auto">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
-        <p className="text-gray-600 mt-2">Sign in to your account</p>
+        <h2 className="text-2xl font-bold text-gray-900">{t('auth.welcomeBack')}</h2>
+        <p className="text-gray-600 mt-2">{t('auth.signInToAccount')}</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input
-          label="Email"
+          label={t('auth.email')}
           type="email"
-          placeholder="Enter your email"
+          placeholder={t('auth.email')}
           {...register('email')}
           error={errors.email?.message}
         />
 
         <Input
-          label="Password"
+          label={t('auth.password')}
           type={showPassword ? 'text' : 'password'}
-          placeholder="Enter your password"
+          placeholder={t('auth.password')}
           {...register('password')}
           error={errors.password?.message}
         />
@@ -73,7 +76,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
           />
           <label htmlFor="showPassword" className="ml-2 text-sm text-gray-600">
-            Show password
+            {t('auth.showPassword')}
           </label>
         </div>
 
@@ -84,7 +87,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           fullWidth
           isLoading={isLoading}
         >
-          Sign In
+          {t('auth.signIn')}
         </Button>
 
         <div className="text-center">
@@ -93,7 +96,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             onClick={onSwitchToRegister}
             className="text-sm text-blue-600 hover:text-blue-800"
           >
-            Don't have an account? Sign up
+            {t('auth.dontHaveAccount')}
           </button>
         </div>
       </form>
