@@ -1,41 +1,44 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Users, BookOpen, Activity, UserCheck, TrendingUp, AlertCircle } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
 export const AdminDashboard: React.FC = () => {
+  const { t } = useTranslation();
+
   const stats = [
-    { title: 'Total Users', value: '1,234', icon: Users, color: 'blue' },
-    { title: 'Active Courses', value: '56', icon: BookOpen, color: 'green' },
-    { title: 'Live Sessions', value: '12', icon: Activity, color: 'purple' },
-    { title: 'Pending Approvals', value: '8', icon: UserCheck, color: 'orange' },
+    { title: t('dashboard.totalUsers'), value: '1,234', icon: Users, color: 'blue' },
+    { title: t('dashboard.activeCourses'), value: '56', icon: BookOpen, color: 'green' },
+    { title: t('dashboard.liveSessionsNow'), value: '12', icon: Activity, color: 'purple' },
+    { title: t('dashboard.pendingApprovals'), value: '8', icon: UserCheck, color: 'orange' },
   ];
 
   const recentActivity = [
-    { id: 1, user: 'John Doe', action: 'Registered as Student', time: '5 min ago' },
-    { id: 2, user: 'Dr. Smith', action: 'Created new course', time: '1 hour ago' },
-    { id: 3, user: 'Jane Wilson', action: 'Submitted exam', time: '2 hours ago' },
-    { id: 4, user: 'Prof. Johnson', action: 'Started live session', time: '3 hours ago' },
+    { id: 1, user: 'أحمد محمد', action: t('dashboard.registeredAsStudent'), time: 'منذ 5 دقائق' },
+    { id: 2, user: 'د. سميث', action: t('dashboard.createdNewCourse'), time: 'منذ ساعة' },
+    { id: 3, user: 'فاطمة أحمد', action: t('dashboard.submittedExam'), time: 'منذ ساعتين' },
+    { id: 4, user: 'أ. جونسون', action: t('dashboard.startedLiveSession'), time: 'منذ 3 ساعات' },
   ];
 
   const pendingApprovals = [
-    { id: 1, name: 'Dr. Emily Brown', role: 'Instructor', department: 'Mathematics', date: '2024-01-15' },
-    { id: 2, name: 'Prof. Michael Davis', role: 'Instructor', department: 'Computer Science', date: '2024-01-14' },
-    { id: 3, name: 'Dr. Sarah Wilson', role: 'Instructor', department: 'Physics', date: '2024-01-13' },
+    { id: 1, name: 'د. إيميلي براون', role: t('auth.instructor'), department: 'الرياضيات', date: '2024-01-15' },
+    { id: 2, name: 'أ. مايكل ديفيس', role: t('auth.instructor'), department: 'علوم الحاسوب', date: '2024-01-14' },
+    { id: 3, name: 'د. سارة ويلسون', role: t('auth.instructor'), department: 'الفيزياء', date: '2024-01-13' },
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.adminDashboard')}</h1>
         <div className="flex space-x-2">
           <Button variant="outline">
-            <TrendingUp className="mr-2" size={16} />
-            Analytics
+            <TrendingUp className="mr-2 rtl:ml-2 rtl:mr-0" size={16} />
+            {t('dashboard.analytics')}
           </Button>
           <Button variant="primary">
-            <AlertCircle className="mr-2" size={16} />
-            System Health
+            <AlertCircle className="mr-2 rtl:ml-2 rtl:mr-0" size={16} />
+            {t('dashboard.systemHealth')}
           </Button>
         </div>
       </div>
@@ -56,7 +59,7 @@ export const AdminDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
         <Card>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.recentActivity')}</h3>
           <div className="space-y-3">
             {recentActivity.map((activity) => (
               <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -77,26 +80,26 @@ export const AdminDashboard: React.FC = () => {
 
         {/* System Overview */}
         <Card>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">System Overview</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.systemOverview')}</h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">Server Status</span>
+              <span className="text-sm font-medium text-gray-700">{t('dashboard.serverStatus')}</span>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Online
+                {t('dashboard.online')}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">Database</span>
+              <span className="text-sm font-medium text-gray-700">{t('dashboard.database')}</span>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Healthy
+                {t('dashboard.healthy')}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">Storage Used</span>
+              <span className="text-sm font-medium text-gray-700">{t('dashboard.storageUsed')}</span>
               <span className="text-sm text-gray-600">2.4 GB / 10 GB</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">Active Sessions</span>
+              <span className="text-sm font-medium text-gray-700">{t('dashboard.activeSessions')}</span>
               <span className="text-sm text-gray-600">127</span>
             </div>
           </div>
@@ -105,16 +108,16 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Pending Approvals */}
       <Card>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Pending Approvals</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.pendingApprovals')}</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-2 text-sm font-medium text-gray-600">Name</th>
-                <th className="text-left py-2 text-sm font-medium text-gray-600">Role</th>
-                <th className="text-left py-2 text-sm font-medium text-gray-600">Department</th>
-                <th className="text-left py-2 text-sm font-medium text-gray-600">Date</th>
-                <th className="text-left py-2 text-sm font-medium text-gray-600">Actions</th>
+                <th className="text-left rtl:text-right py-2 text-sm font-medium text-gray-600">{t('dashboard.name')}</th>
+                <th className="text-left rtl:text-right py-2 text-sm font-medium text-gray-600">{t('dashboard.role')}</th>
+                <th className="text-left rtl:text-right py-2 text-sm font-medium text-gray-600">{t('dashboard.department')}</th>
+                <th className="text-left rtl:text-right py-2 text-sm font-medium text-gray-600">{t('dashboard.date')}</th>
+                <th className="text-left rtl:text-right py-2 text-sm font-medium text-gray-600">{t('dashboard.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -126,10 +129,10 @@ export const AdminDashboard: React.FC = () => {
                   <td className="py-3 text-sm text-gray-600">{approval.date}</td>
                   <td className="py-3 space-x-2">
                     <Button variant="success" size="sm">
-                      Approve
+                      {t('dashboard.approve')}
                     </Button>
                     <Button variant="danger" size="sm">
-                      Reject
+                      {t('dashboard.reject')}
                     </Button>
                   </td>
                 </tr>

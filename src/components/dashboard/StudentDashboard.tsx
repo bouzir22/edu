@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BookOpen, Calendar, Clock, Award, Video, FileText } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -7,6 +8,7 @@ import { format } from 'date-fns';
 
 export const StudentDashboard: React.FC = () => {
   const { activeSessions, fetchActiveSessions } = useLiveSessionStore();
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchActiveSessions();
@@ -33,10 +35,10 @@ export const StudentDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.studentDashboard')}</h1>
         <Button variant="primary">
-          <Calendar className="mr-2" size={16} />
-          View Schedule
+          <Calendar className="mr-2 rtl:ml-2 rtl:mr-0" size={16} />
+          {t('dashboard.viewSchedule')}
         </Button>
       </div>
 
@@ -47,7 +49,7 @@ export const StudentDashboard: React.FC = () => {
             <BookOpen className="text-blue-600" size={24} />
           </div>
           <h3 className="text-lg font-semibold text-gray-900">3</h3>
-          <p className="text-sm text-gray-600">Enrolled Courses</p>
+          <p className="text-sm text-gray-600">{t('dashboard.enrolledCourses')}</p>
         </Card>
 
         <Card className="text-center">
@@ -55,7 +57,7 @@ export const StudentDashboard: React.FC = () => {
             <Award className="text-green-600" size={24} />
           </div>
           <h3 className="text-lg font-semibold text-gray-900">B+</h3>
-          <p className="text-sm text-gray-600">Average Grade</p>
+          <p className="text-sm text-gray-600">{t('dashboard.averageGrade')}</p>
         </Card>
 
         <Card className="text-center">
@@ -63,7 +65,7 @@ export const StudentDashboard: React.FC = () => {
             <Video className="text-purple-600" size={24} />
           </div>
           <h3 className="text-lg font-semibold text-gray-900">{activeSessions.length}</h3>
-          <p className="text-sm text-gray-600">Live Sessions Now</p>
+          <p className="text-sm text-gray-600">{t('dashboard.liveSessionsNow')}</p>
         </Card>
 
         <Card className="text-center">
@@ -71,7 +73,7 @@ export const StudentDashboard: React.FC = () => {
             <FileText className="text-orange-600" size={24} />
           </div>
           <h3 className="text-lg font-semibold text-gray-900">1</h3>
-          <p className="text-sm text-gray-600">Pending Exams</p>
+          <p className="text-sm text-gray-600">{t('dashboard.pendingExams')}</p>
         </Card>
       </div>
 
@@ -79,7 +81,7 @@ export const StudentDashboard: React.FC = () => {
         {/* Live Sessions */}
         {activeSessions.length > 0 && (
           <Card>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Live Sessions Now</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.liveSessionsNow')}</h3>
             <div className="space-y-3">
               {activeSessions.map((session) => (
                 <div key={session.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
@@ -97,10 +99,10 @@ export const StudentDashboard: React.FC = () => {
                   <div className="text-right">
                     <div className="flex items-center space-x-1 text-sm text-green-600 mb-1">
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <span>Live</span>
+                     <span>{t('liveSessions.live')}</span>
                     </div>
                     <Button variant="success" size="sm">
-                      Join
+                     {t('dashboard.join')}
                     </Button>
                   </div>
                 </div>
@@ -111,7 +113,7 @@ export const StudentDashboard: React.FC = () => {
 
         {/* Today's Classes */}
         <Card>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Today's Classes</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.todaysClasses')}</h3>
           <div className="space-y-3">
             {upcomingClasses.map((class_) => (
               <div key={class_.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -127,7 +129,7 @@ export const StudentDashboard: React.FC = () => {
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-900">{class_.time}</p>
                   <Button variant="outline" size="sm">
-                    Join
+                    {t('dashboard.join')}
                   </Button>
                 </div>
               </div>
@@ -137,7 +139,7 @@ export const StudentDashboard: React.FC = () => {
 
         {/* Course Progress */}
         <Card>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Course Progress</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.courseProgress')}</h3>
           <div className="space-y-4">
             {enrolledCourses.map((course) => (
               <div key={course.id} className="space-y-2">
@@ -160,14 +162,14 @@ export const StudentDashboard: React.FC = () => {
 
       {/* Recent Grades */}
       <Card>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Grades</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.recentGrades')}</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-2 text-sm font-medium text-gray-600">Subject</th>
-                <th className="text-left py-2 text-sm font-medium text-gray-600">Grade</th>
-                <th className="text-left py-2 text-sm font-medium text-gray-600">Date</th>
+                <th className="text-left rtl:text-right py-2 text-sm font-medium text-gray-600">{t('grades.assignment')}</th>
+                <th className="text-left rtl:text-right py-2 text-sm font-medium text-gray-600">{t('dashboard.grade')}</th>
+                <th className="text-left rtl:text-right py-2 text-sm font-medium text-gray-600">{t('dashboard.date')}</th>
               </tr>
             </thead>
             <tbody>
