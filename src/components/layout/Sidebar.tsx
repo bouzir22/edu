@@ -61,10 +61,8 @@ export const Sidebar: React.FC = () => {
         <div className="flex items-center space-x-2 mb-8">
           <img 
             src="/OU-S-Logo.svg" 
-            alt={t('university.shortName')} 
             className="h-8 w-auto filter brightness-0 invert"
           />
-          <span className="text-xl font-bold">{t('university.shortName')}</span>
         </div>
 
         <nav className="space-y-2">

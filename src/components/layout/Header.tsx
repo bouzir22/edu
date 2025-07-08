@@ -18,10 +18,8 @@ export const Header: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <img 
                   src="/OU-S-Logo.svg" 
-                  alt={t('university.shortName')} 
                   className="h-8 w-auto"
                 />
-                <h1 className="text-xl font-bold text-gray-900">{t('university.shortName')}</h1>
               </div>
             </div>
           </div>
