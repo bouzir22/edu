@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { JaaSMeeting } from '@jitsi/react-sdk';
 import { LiveSession } from '../../types';
 import { useAuthStore } from '../../stores/authStore';
@@ -15,6 +16,7 @@ interface JitsiMeetComponentProps {
 export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session, onClose }) => {
   const { user } = useAuthStore();
   const { joinSession, leaveSession } = useLiveSessionStore();
+  const { t } = useTranslation();
   const [hasJoined, setHasJoined] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
       } catch (error) {
         if (mounted) {
           console.error('Failed to initialize session:', error);
-          setError('Failed to join the session. Please try again.');
+          setError(t('liveSessions.connectionFailed'));
           setIsLoading(false);
         }
       }
@@ -76,7 +78,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
       setIsLoading(true);
       setHasJoined(false);
     } else {
-      setError('Maximum retry attempts reached. Please try again later or use the built-in video option.');
+      setError(t('liveSessions.connectionFailed'));
     }
   };
 
@@ -120,7 +122,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
 
   const handleError = (error: any) => {
     console.error('Jitsi error:', error);
-    setError('Connection failed. Please check your internet connection and try again.');
+    setError(t('liveSessions.connectionFailed'));
     setIsLoading(false);
   };
 
@@ -237,24 +239,24 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
           <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mx-auto mb-4">
             <AlertCircle className="text-red-600" size={32} />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Connection Failed</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('liveSessions.connectionFailed')}</h3>
           <p className="text-gray-600 mb-4">{error}</p>
           <p className="text-sm text-gray-500 mb-6">
-            Attempt {connectionAttempts + 1} of {maxRetries + 1}
+            {t('liveSessions.tryAgain')} {connectionAttempts + 1} من {maxRetries + 1}
           </p>
           <div className="flex flex-col space-y-3">
             {connectionAttempts < maxRetries ? (
               <Button variant="primary" onClick={retryConnection} fullWidth>
                 <RefreshCw className="mr-2" size={16} />
-                Try Again
+                {t('liveSessions.tryAgain')}
               </Button>
             ) : (
               <Button variant="primary" onClick={switchToBuiltIn} fullWidth>
-                Use Built-in Video
+                {t('liveSessions.useBuiltInVideo')}
               </Button>
             )}
             <Button variant="outline" onClick={handleLeaveSession} fullWidth>
-              Go Back
+              {t('liveSessions.goBack')}
             </Button>
           </div>
         </Card>
@@ -271,12 +273,12 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
           <div className="flex items-center space-x-2 text-sm text-gray-300">
             <div className="flex items-center space-x-1">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span>Live</span>
+              <span>{t('liveSessions.live')}</span>
             </div>
             <span>•</span>
             <div className="flex items-center space-x-1">
               <Users size={16} />
-              <span>{participantCount} participants</span>
+              <span>{participantCount} {t('liveSessions.participants')}</span>
             </div>
           </div>
         </div>
@@ -296,10 +298,10 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
         <div className="absolute inset-0 bg-gray-900 flex items-center justify-center z-20">
           <div className="text-center text-white">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-            <h3 className="text-lg font-semibold mb-2">Connecting to Session...</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('liveSessions.connectingToSession')}</h3>
             <p className="text-gray-300">Loading {session.title}</p>
             <p className="text-sm text-gray-400 mt-2">
-              {connectionAttempts > 0 ? `Retry attempt ${connectionAttempts}...` : 'This may take a few moments'}
+              {connectionAttempts > 0 ? `${t('liveSessions.tryAgain')} ${connectionAttempts}...` : 'قد يستغرق هذا بضع لحظات'}
             </p>
             <div className="mt-4">
               <Button
@@ -308,7 +310,7 @@ export const JitsiMeetComponent: React.FC<JitsiMeetComponentProps> = ({ session,
                 onClick={switchToBuiltIn}
                 className="text-white border-white hover:bg-white hover:text-gray-900"
               >
-                Use Built-in Video Instead
+                {t('liveSessions.useBuiltInVideo')}
               </Button>
             </div>
           </div>

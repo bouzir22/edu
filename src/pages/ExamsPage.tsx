@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Clock, Users, FileText, Calendar, CheckCircle, AlertCircle, Play, Eye } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -8,6 +9,7 @@ import { format } from 'date-fns';
 
 export const ExamsPage: React.FC = () => {
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
 
@@ -86,21 +88,21 @@ export const ExamsPage: React.FC = () => {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
           <Clock size={12} className="mr-1" />
-          Upcoming
+          {t('exams.upcoming')}
         </span>
       );
     } else if (now >= startDate && now <= endDate) {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
           <div className="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></div>
-          Active
+          {t('exams.status.active')}
         </span>
       );
     } else {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
           <CheckCircle size={12} className="mr-1" />
-          Completed
+          {t('exams.completed')}
         </span>
       );
     }
@@ -116,10 +118,10 @@ export const ExamsPage: React.FC = () => {
         <div className="flex space-x-2">
           <Button variant="outline" size="sm">
             <Eye size={14} className="mr-1" />
-            View
+            {t('common.view')}
           </Button>
           <Button variant="primary" size="sm">
-            Manage
+            {t('exams.manage')}
           </Button>
         </div>
       );
@@ -130,21 +132,21 @@ export const ExamsPage: React.FC = () => {
         return (
           <Button variant="outline" size="sm" disabled>
             <Clock size={14} className="mr-1" />
-            Starts {format(startDate, 'MMM dd, HH:mm')}
+            {t('exams.startTime')} {format(startDate, 'MMM dd, HH:mm')}
           </Button>
         );
       } else if (now >= startDate && now <= endDate && exam.attempts < exam.maxAttempts) {
         return (
           <Button variant="success" size="sm">
             <Play size={14} className="mr-1" />
-            Start Exam
+            {t('exams.startExam')}
           </Button>
         );
       } else if (exam.attempts >= exam.maxAttempts || now > endDate) {
         return (
           <Button variant="outline" size="sm">
             <Eye size={14} className="mr-1" />
-            View Results
+            {t('exams.viewResults')}
           </Button>
         );
       }
@@ -157,18 +159,18 @@ export const ExamsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Exams</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('exams.title')}</h1>
           <p className="text-gray-600 mt-1">
             {isInstructor 
-              ? "Create and manage examinations for your courses"
-              : "View and take your scheduled examinations"
+              ? t('exams.description.instructor')
+              : t('exams.description.student')
             }
           </p>
         </div>
         {isInstructor && (
           <Button variant="primary">
             <Plus className="mr-2" size={16} />
-            Create Exam
+            {t('exams.createExam')}
           </Button>
         )}
       </div>
@@ -177,7 +179,7 @@ export const ExamsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <Input
-            placeholder="Search exams..."
+            placeholder={t('common.search') + '...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -187,10 +189,10 @@ export const ExamsPage: React.FC = () => {
           onChange={(e) => setSelectedFilter(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="all">All Exams</option>
-          <option value="upcoming">Upcoming</option>
-          <option value="active">Active</option>
-          <option value="completed">Completed</option>
+          <option value="all">{t('exams.title')}</option>
+          <option value="upcoming">{t('exams.upcoming')}</option>
+          <option value="active">{t('exams.status.active')}</option>
+          <option value="completed">{t('exams.completed')}</option>
         </select>
       </div>
 
@@ -201,7 +203,7 @@ export const ExamsPage: React.FC = () => {
             <FileText className="text-blue-600" size={24} />
           </div>
           <h3 className="text-lg font-semibold text-gray-900">{exams.length}</h3>
-          <p className="text-sm text-gray-600">Total Exams</p>
+          <p className="text-sm text-gray-600">{t('exams.totalExams')}</p>
         </Card>
 
         <Card className="text-center">
@@ -216,7 +218,7 @@ export const ExamsPage: React.FC = () => {
               return now >= start && now <= end;
             }).length}
           </h3>
-          <p className="text-sm text-gray-600">Active Now</p>
+          <p className="text-sm text-gray-600">{t('exams.activeNow')}</p>
         </Card>
 
         <Card className="text-center">
@@ -226,7 +228,7 @@ export const ExamsPage: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900">
             {exams.filter(e => new Date(e.startDate) > new Date()).length}
           </h3>
-          <p className="text-sm text-gray-600">Upcoming</p>
+          <p className="text-sm text-gray-600">{t('exams.upcoming')}</p>
         </Card>
 
         <Card className="text-center">
@@ -240,7 +242,7 @@ export const ExamsPage: React.FC = () => {
             }
           </h3>
           <p className="text-sm text-gray-600">
-            {isStudent ? 'Completed' : 'Finished'}
+            {isStudent ? t('exams.completed') : t('exams.finished')}
           </p>
         </Card>
       </div>
@@ -264,19 +266,19 @@ export const ExamsPage: React.FC = () => {
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-500">Start Time</p>
+                      <p className="text-gray-500">{t('exams.startTime')}</p>
                       <p className="font-medium">{format(new Date(exam.startDate), 'MMM dd, HH:mm')}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Duration</p>
-                      <p className="font-medium">{exam.duration} minutes</p>
+                      <p className="text-gray-500">{t('exams.duration')}</p>
+                      <p className="font-medium">{exam.duration} {t('exams.minutes')}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Questions</p>
+                      <p className="text-gray-500">{t('exams.questions')}</p>
                       <p className="font-medium">{exam.totalQuestions}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Points</p>
+                      <p className="text-gray-500">{t('exams.points')}</p>
                       <p className="font-medium">{exam.totalPoints}</p>
                     </div>
                   </div>
@@ -290,7 +292,7 @@ export const ExamsPage: React.FC = () => {
                         </span>
                       </div>
                       <div className="text-gray-600">
-                        Completion: {Math.round((exam.submissions / exam.totalStudents) * 100)}%
+                        {t('exams.completion')}: {Math.round((exam.submissions / exam.totalStudents) * 100)}%
                       </div>
                     </div>
                   )}
@@ -298,11 +300,11 @@ export const ExamsPage: React.FC = () => {
                   {isStudent && exam.score && (
                     <div className="mt-3 flex items-center space-x-4 text-sm">
                       <div className="flex items-center space-x-2">
-                        <span className="text-gray-600">Score:</span>
+                        <span className="text-gray-600">{t('exams.score')}:</span>
                         <span className="font-semibold text-green-600">{exam.score}%</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-gray-600">Grade:</span>
+                        <span className="text-gray-600">{t('exams.grade')}:</span>
                         <span className="font-semibold text-blue-600">{exam.grade}</span>
                       </div>
                     </div>
@@ -311,7 +313,7 @@ export const ExamsPage: React.FC = () => {
                   {isStudent && exam.attempts > 0 && !exam.score && (
                     <div className="mt-3 text-sm">
                       <span className="text-gray-600">
-                        Attempts: {exam.attempts}/{exam.maxAttempts}
+                        {t('exams.attempts')}: {exam.attempts}/{exam.maxAttempts}
                       </span>
                     </div>
                   )}
@@ -322,7 +324,7 @@ export const ExamsPage: React.FC = () => {
                 {getActionButton(exam)}
                 {exam.attempts < exam.maxAttempts && new Date() < new Date(exam.endDate) && isStudent && (
                   <span className="text-xs text-gray-500">
-                    {exam.maxAttempts - exam.attempts} attempts left
+                    {exam.maxAttempts - exam.attempts} {t('exams.attemptsLeft')}
                   </span>
                 )}
               </div>
@@ -335,19 +337,19 @@ export const ExamsPage: React.FC = () => {
       {filteredExams.length === 0 && (
         <Card className="text-center py-12">
           <FileText className="mx-auto text-gray-400 mb-4" size={48} />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No exams found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('exams.noExamsFound')}</h3>
           <p className="text-gray-600 mb-4">
             {searchTerm || selectedFilter !== 'all'
-              ? "No exams match your current search or filter criteria."
+              ? t('exams.noExamsFound')
               : isInstructor
-              ? "Create your first exam to start assessing student knowledge."
-              : "No exams are currently scheduled. Check back later."
+              ? t('exams.createFirstExam')
+              : t('exams.noExamsScheduled')
             }
           </p>
           {isInstructor && !searchTerm && selectedFilter === 'all' && (
             <Button variant="primary">
               <Plus className="mr-2" size={16} />
-              Create Your First Exam
+              {t('exams.createFirstExam')}
             </Button>
           )}
         </Card>

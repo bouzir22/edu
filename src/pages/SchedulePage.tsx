@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Calendar, Clock, MapPin, Users, Plus, ChevronLeft, ChevronRight, Video, BookOpen } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -7,6 +8,7 @@ import { format, startOfWeek, addDays, isSameDay, addWeeks, subWeeks, startOfDay
 
 export const SchedulePage: React.FC = () => {
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [viewMode, setViewMode] = useState<'week' | 'day'>('week');
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -163,11 +165,11 @@ export const SchedulePage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('schedule.title')}</h1>
           <p className="text-gray-600 mt-1">
             {isInstructor 
-              ? "Manage your teaching schedule and office hours"
-              : "View your class schedule and upcoming events"
+              ? t('schedule.description.instructor')
+              : t('schedule.description.student')
             }
           </p>
         </div>
@@ -181,7 +183,7 @@ export const SchedulePage: React.FC = () => {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Week
+              {t('schedule.week')}
             </button>
             <button
               onClick={() => setViewMode('day')}
@@ -191,13 +193,13 @@ export const SchedulePage: React.FC = () => {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Day
+              {t('schedule.day')}
             </button>
           </div>
           {isInstructor && (
             <Button variant="primary">
               <Plus className="mr-2" size={16} />
-              Add Event
+              {t('schedule.addEvent')}
             </Button>
           )}
         </div>
@@ -210,7 +212,7 @@ export const SchedulePage: React.FC = () => {
             <Calendar className="text-blue-600" size={24} />
           </div>
           <h3 className="text-lg font-semibold text-gray-900">{todayEvents.length}</h3>
-          <p className="text-sm text-gray-600">Today's Events</p>
+          <p className="text-sm text-gray-600">{t('schedule.todaysEvents')}</p>
         </Card>
 
         <Card className="text-center">
@@ -218,7 +220,7 @@ export const SchedulePage: React.FC = () => {
             <Clock className="text-green-600" size={24} />
           </div>
           <h3 className="text-lg font-semibold text-gray-900">{upcomingEvents.length}</h3>
-          <p className="text-sm text-gray-600">This Week</p>
+          <p className="text-sm text-gray-600">{t('schedule.thisWeek')}</p>
         </Card>
 
         <Card className="text-center">
@@ -228,7 +230,7 @@ export const SchedulePage: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900">
             {events.filter(e => e.type === 'lecture').length}
           </h3>
-          <p className="text-sm text-gray-600">Lectures</p>
+          <p className="text-sm text-gray-600">{t('schedule.lectures')}</p>
         </Card>
 
         <Card className="text-center">
@@ -238,7 +240,7 @@ export const SchedulePage: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900">
             {events.filter(e => e.isOnline).length}
           </h3>
-          <p className="text-sm text-gray-600">Online Events</p>
+          <p className="text-sm text-gray-600">{t('schedule.onlineEvents')}</p>
         </Card>
       </div>
 
@@ -248,7 +250,7 @@ export const SchedulePage: React.FC = () => {
           <Card>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-900">
-                {viewMode === 'week' ? 'Weekly Schedule' : 'Daily Schedule'}
+                {viewMode === 'week' ? t('schedule.weeklySchedule') : t('schedule.dailySchedule')}
               </h2>
               <div className="flex items-center space-x-2">
                 <Button
@@ -282,9 +284,9 @@ export const SchedulePage: React.FC = () => {
                       <div className="flex items-center justify-between mb-3">
                         <h3 className={`font-medium ${isToday ? 'text-blue-900' : 'text-gray-900'}`}>
                           {format(day, 'EEEE, MMM dd')}
-                          {isToday && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Today</span>}
+                          {isToday && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{t('schedule.todaysEvents')}</span>}
                         </h3>
-                        <span className="text-sm text-gray-500">{dayEvents.length} events</span>
+                        <span className="text-sm text-gray-500">{dayEvents.length} {t('schedule.events')}</span>
                       </div>
                       
                       {dayEvents.length > 0 ? (
@@ -313,7 +315,7 @@ export const SchedulePage: React.FC = () => {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-sm text-gray-500 text-center py-4">No events scheduled</p>
+                        <p className="text-sm text-gray-500 text-center py-4">{t('schedule.noEventsScheduled')}</p>
                       )}
                     </div>
                   );
@@ -322,7 +324,7 @@ export const SchedulePage: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 {/* Day view implementation would go here */}
-                <p className="text-center text-gray-500 py-8">Day view coming soon</p>
+                <p className="text-center text-gray-500 py-8">{t('schedule.dailySchedule')} قريباً</p>
               </div>
             )}
           </Card>
@@ -332,7 +334,7 @@ export const SchedulePage: React.FC = () => {
         <div className="space-y-6">
           {/* Today's Events */}
           <Card>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Today's Events</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('schedule.todaysEvents')}</h3>
             {todayEvents.length > 0 ? (
               <div className="space-y-3">
                 {todayEvents.map((event) => (
@@ -352,13 +354,13 @@ export const SchedulePage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 text-center py-4">No events today</p>
+              <p className="text-sm text-gray-500 text-center py-4">{t('schedule.noEventsToday')}</p>
             )}
           </Card>
 
           {/* Upcoming Events */}
           <Card>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Events</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('schedule.upcomingEvents')}</h3>
             {upcomingEvents.length > 0 ? (
               <div className="space-y-3">
                 {upcomingEvents.map((event) => (
@@ -381,26 +383,26 @@ export const SchedulePage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 text-center py-4">No upcoming events</p>
+              <p className="text-sm text-gray-500 text-center py-4">{t('schedule.noUpcomingEvents')}</p>
             )}
           </Card>
 
           {/* Quick Actions */}
           {isInstructor && (
             <Card>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('schedule.quickActions')}</h3>
               <div className="space-y-2">
                 <Button variant="outline" size="sm" fullWidth>
                   <Plus className="mr-2" size={14} />
-                  Schedule Office Hours
+                  {t('schedule.scheduleOfficeHours')}
                 </Button>
                 <Button variant="outline" size="sm" fullWidth>
                   <Calendar className="mr-2" size={14} />
-                  Create Recurring Event
+                  {t('schedule.createRecurringEvent')}
                 </Button>
                 <Button variant="outline" size="sm" fullWidth>
                   <Video className="mr-2" size={14} />
-                  Schedule Online Session
+                  {t('schedule.scheduleOnlineSession')}
                 </Button>
               </div>
             </Card>

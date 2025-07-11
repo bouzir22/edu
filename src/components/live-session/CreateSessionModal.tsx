@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -38,18 +39,19 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
   courseId 
 }) => {
   const { createSession, isLoading } = useLiveSessionStore();
+  const { t } = useTranslation();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
+    title: z.string().min(3, t('liveSessions.validation.titleMinLength')),
+    description: z.string().optional(),
+    startTime: z.string().min(1, t('liveSessions.validation.startTimeRequired')),
+    endTime: z.string().min(1, t('liveSessions.validation.endTimeRequired')),
+    courseId: z.string().min(1, t('liveSessions.validation.courseRequired')),
   } = useForm<CreateSessionFormData>({
     resolver: zodResolver(createSessionSchema),
     defaultValues: {
       courseId: courseId || '',
       startTime: new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16), // 1 hour from now
-      endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString().slice(0, 16), // 2 hours from now
+    message: t('liveSessions.validation.endTimeAfterStart'),
     },
   });
 
@@ -61,11 +63,11 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
         endTime: new Date(data.endTime).toISOString(),
       });
       
-      toast.success('Live session created successfully!');
+      toast.success(t('liveSessions.sessionCreated'));
       reset();
       onClose();
     } catch (error) {
-      toast.error('Failed to create session. Please try again.');
+      toast.error(t('liveSessions.sessionCreateFailed'));
     }
   };
 
@@ -80,7 +82,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-md">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Create Live Session</h2>
+          <h2 className="text-xl font-bold text-gray-900">{t('liveSessions.createSession')}</h2>
           <Button variant="ghost" size="sm" onClick={handleClose}>
             <X size={20} />
           </Button>
@@ -88,19 +90,19 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
-            label="Session Title"
-            placeholder="Enter session title"
+            label={t('liveSessions.sessionTitle')}
+            placeholder={t('liveSessions.sessionTitle')}
             {...register('title')}
             error={errors.title?.message}
           />
 
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
-              Description (Optional)
+              {t('liveSessions.description')}
             </label>
             <textarea
               {...register('description')}
-              placeholder="Enter session description"
+              placeholder={t('liveSessions.description')}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400"
             />
@@ -109,16 +111,16 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
           {!courseId && (
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
-                Course
+                {t('liveSessions.course')}
               </label>
               <select
                 {...register('courseId')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">Select a course</option>
-                <option value="1">Advanced Mathematics</option>
-                <option value="2">Computer Science Fundamentals</option>
-                <option value="3">Physics Laboratory</option>
+                <option value="">{t('liveSessions.selectCourse')}</option>
+                <option value="1">الرياضيات المتقدمة</option>
+                <option value="2">أساسيات علوم الحاسوب</option>
+                <option value="3">مختبر الفيزياء</option>
               </select>
               {errors.courseId && (
                 <p className="text-sm text-red-600">{errors.courseId.message}</p>
@@ -128,14 +130,14 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="Start Time"
+              label={t('liveSessions.startTime')}
               type="datetime-local"
               {...register('startTime')}
               error={errors.startTime?.message}
             />
 
             <Input
-              label="End Time"
+              label={t('liveSessions.endTime')}
               type="datetime-local"
               {...register('endTime')}
               error={errors.endTime?.message}
@@ -149,7 +151,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
               fullWidth
               onClick={handleClose}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
@@ -157,7 +159,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
               fullWidth
               isLoading={isLoading}
             >
-              Create Session
+              {t('liveSessions.createSession')}
             </Button>
           </div>
         </form>

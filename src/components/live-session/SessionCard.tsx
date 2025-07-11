@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { LiveSession } from '../../types';
 import { useAuthStore } from '../../stores/authStore';
@@ -15,6 +16,7 @@ interface SessionCardProps {
 export const SessionCard: React.FC<SessionCardProps> = ({ session, onJoinSession }) => {
   const { user } = useAuthStore();
   const { startSession, endSession, isLoading } = useLiveSessionStore();
+  const { t } = useTranslation();
 
   const isInstructor = user?.role === 'instructor';
   const isUpcoming = new Date(session.startTime) > new Date();
@@ -47,7 +49,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onJoinSession
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
           <div className="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></div>
-          Live
+          {t('liveSessions.live')}
         </span>
       );
     }
@@ -56,7 +58,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onJoinSession
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
           <Clock size={12} className="mr-1" />
-          Upcoming
+          {t('liveSessions.upcoming')}
         </span>
       );
     }
@@ -64,7 +66,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onJoinSession
     if (hasEnded) {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          Ended
+          {t('exams.finished')}
         </span>
       );
     }
@@ -89,7 +91,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onJoinSession
               fullWidth
             >
               <Video size={16} className="mr-1" />
-              Join Session
+              {t('liveSessions.joinSession')}
             </Button>
             <Button
               variant="danger"
@@ -99,7 +101,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onJoinSession
               fullWidth
             >
               <Square size={16} className="mr-1" />
-              End Session
+              {t('liveSessions.endSession')}
             </Button>
           </div>
         );
@@ -115,7 +117,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onJoinSession
             fullWidth
           >
             <Play size={16} className="mr-1" />
-            Start Session
+            {t('liveSessions.startSession')}
           </Button>
         );
       }
@@ -130,7 +132,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onJoinSession
             fullWidth
           >
             <Video size={16} className="mr-1" />
-            Join Session
+            {t('liveSessions.joinSession')}
           </Button>
         );
       }
@@ -144,7 +146,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onJoinSession
             fullWidth
           >
             <Clock size={16} className="mr-1" />
-            Starts {format(new Date(session.startTime), 'HH:mm')}
+            {t('liveSessions.started')} {format(new Date(session.startTime), 'HH:mm')}
           </Button>
         );
       }
@@ -172,22 +174,22 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onJoinSession
 
       <div className="space-y-2 mb-4">
         <div className="flex items-center justify-between text-sm text-gray-600">
-          <span>Start Time</span>
+          <span>{t('liveSessions.startTime')}</span>
           <span className="font-medium">
             {format(new Date(session.startTime), 'MMM dd, HH:mm')}
           </span>
         </div>
         
         <div className="flex items-center justify-between text-sm text-gray-600">
-          <span>Duration</span>
+          <span>{t('exams.duration')}</span>
           <span className="font-medium">
-            {Math.round((new Date(session.endTime).getTime() - new Date(session.startTime).getTime()) / (1000 * 60))} min
+            {Math.round((new Date(session.endTime).getTime() - new Date(session.startTime).getTime()) / (1000 * 60))} {t('exams.minutes')}
           </span>
         </div>
         
         {isOngoing && (
           <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>Participants</span>
+            <span>{t('liveSessions.participants')}</span>
             <div className="flex items-center space-x-1">
               <Users size={14} />
               <span className="font-medium">{session.participantCount || 0}</span>

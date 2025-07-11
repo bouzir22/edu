@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TrendingUp, TrendingDown, Award, BarChart3, Download, Filter, Calendar } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -8,6 +9,7 @@ import { format } from 'date-fns';
 
 export const GradesPage: React.FC = () => {
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('all');
   const [selectedSemester, setSelectedSemester] = useState('current');
@@ -162,22 +164,22 @@ export const GradesPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Grades</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('grades.title')}</h1>
           <p className="text-gray-600 mt-1">
             {isStudent 
-              ? "Track your academic performance and progress"
-              : "Manage and review student grades and performance"
+              ? t('grades.description.student')
+              : t('grades.description.instructor')
             }
           </p>
         </div>
         <div className="flex space-x-2">
           <Button variant="outline">
             <Download className="mr-2" size={16} />
-            Export
+            {t('grades.export')}
           </Button>
           <Button variant="outline">
             <BarChart3 className="mr-2" size={16} />
-            Analytics
+            {t('grades.analytics')}
           </Button>
         </div>
       </div>
@@ -190,7 +192,7 @@ export const GradesPage: React.FC = () => {
               <Award className="text-blue-600" size={24} />
             </div>
             <h3 className="text-2xl font-bold text-gray-900">{overallGPA.toFixed(1)}%</h3>
-            <p className="text-sm text-gray-600">Overall GPA</p>
+            <p className="text-sm text-gray-600">{t('grades.overallGPA')}</p>
           </Card>
 
           <Card className="text-center">
@@ -198,7 +200,7 @@ export const GradesPage: React.FC = () => {
               <TrendingUp className="text-green-600" size={24} />
             </div>
             <h3 className="text-2xl font-bold text-gray-900">{courseStats.length}</h3>
-            <p className="text-sm text-gray-600">Active Courses</p>
+            <p className="text-sm text-gray-600">{t('grades.activeCourses')}</p>
           </Card>
 
           <Card className="text-center">
@@ -208,7 +210,7 @@ export const GradesPage: React.FC = () => {
             <h3 className="text-2xl font-bold text-gray-900">
               {courseStats.reduce((acc, course) => acc + course.completed, 0)}
             </h3>
-            <p className="text-sm text-gray-600">Completed Assignments</p>
+            <p className="text-sm text-gray-600">{t('grades.completedAssignments')}</p>
           </Card>
 
           <Card className="text-center">
@@ -218,7 +220,7 @@ export const GradesPage: React.FC = () => {
             <h3 className="text-2xl font-bold text-gray-900">
               {courseStats.reduce((acc, course) => acc + (course.assignments - course.completed), 0)}
             </h3>
-            <p className="text-sm text-gray-600">Pending</p>
+            <p className="text-sm text-gray-600">{t('grades.pending')}</p>
           </Card>
         </div>
       )}
@@ -226,7 +228,7 @@ export const GradesPage: React.FC = () => {
       {/* Course Overview */}
       {isStudent && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">Course Overview</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('grades.courseOverview')}</h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {courseStats.map((course) => (
               <Card key={course.courseCode} className="hover:shadow-lg transition-shadow">
@@ -251,7 +253,7 @@ export const GradesPage: React.FC = () => {
                 <div className="space-y-3">
                   <div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">Current Grade</span>
+                      <span className="text-gray-600">{t('grades.currentGrade')}</span>
                       <span className="font-medium">{course.percentage}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -263,8 +265,8 @@ export const GradesPage: React.FC = () => {
                   </div>
                   
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Progress</span>
-                    <span className="font-medium">{course.completed}/{course.assignments} assignments</span>
+                    <span className="text-gray-600">{t('grades.progress')}</span>
+                    <span className="font-medium">{course.completed}/{course.assignments} {t('grades.assignments')}</span>
                   </div>
                 </div>
               </Card>
@@ -277,7 +279,7 @@ export const GradesPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <Input
-            placeholder="Search assignments..."
+            placeholder={t('common.search') + '...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -287,7 +289,7 @@ export const GradesPage: React.FC = () => {
           onChange={(e) => setSelectedCourse(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="all">All Courses</option>
+          <option value="all">{t('courses.title')}</option>
           {Array.from(new Set(grades.map(g => g.course))).map(course => (
             <option key={course} value={course}>{course}</option>
           ))}
@@ -297,15 +299,15 @@ export const GradesPage: React.FC = () => {
           onChange={(e) => setSelectedSemester(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="current">Current Semester</option>
-          <option value="fall2023">Fall 2023</option>
-          <option value="spring2023">Spring 2023</option>
+          <option value="current">{t('schedule.thisWeek')}</option>
+          <option value="fall2023">خريف 2023</option>
+          <option value="spring2023">ربيع 2023</option>
         </select>
       </div>
 
       {/* Grades List */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">Recent Grades</h2>
+        <h2 className="text-lg font-semibold text-gray-900">{t('grades.recentGrades')}</h2>
         {filteredGrades.map((grade) => (
           <Card key={grade.id} className="hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between">
@@ -325,19 +327,19 @@ export const GradesPage: React.FC = () => {
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-500">Submitted</p>
+                      <p className="text-gray-500">{t('grades.submitted')}</p>
                       <p className="font-medium">{format(new Date(grade.submittedAt), 'MMM dd, HH:mm')}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Graded</p>
+                      <p className="text-gray-500">{t('grades.graded')}</p>
                       <p className="font-medium">{format(new Date(grade.gradedAt), 'MMM dd, HH:mm')}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Weight</p>
+                      <p className="text-gray-500">{t('grades.weight')}</p>
                       <p className="font-medium">{grade.weight}%</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Instructor</p>
+                      <p className="text-gray-500">{t('grades.instructor')}</p>
                       <p className="font-medium">{grade.instructor}</p>
                     </div>
                   </div>
@@ -364,11 +366,11 @@ export const GradesPage: React.FC = () => {
       {filteredGrades.length === 0 && (
         <Card className="text-center py-12">
           <BarChart3 className="mx-auto text-gray-400 mb-4" size={48} />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No grades found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('grades.noGradesFound')}</h3>
           <p className="text-gray-600">
             {searchTerm || selectedCourse !== 'all'
-              ? "No grades match your current search or filter criteria."
-              : "No grades are available yet. Complete assignments to see your grades here."
+              ? t('grades.noGradesFound')
+              : t('grades.noGradesAvailable')
             }
           </p>
         </Card>
