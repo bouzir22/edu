@@ -40,18 +40,12 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
 }) => {
   const { createSession, isLoading } = useLiveSessionStore();
   const { t } = useTranslation();
-
-    title: z.string().min(3, t('liveSessions.validation.titleMinLength')),
-    description: z.string().optional(),
-    startTime: z.string().min(1, t('liveSessions.validation.startTimeRequired')),
-    endTime: z.string().min(1, t('liveSessions.validation.endTimeRequired')),
-    courseId: z.string().min(1, t('liveSessions.validation.courseRequired')),
-  } = useForm<CreateSessionFormData>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateSessionFormData>({
     resolver: zodResolver(createSessionSchema),
     defaultValues: {
       courseId: courseId || '',
       startTime: new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16), // 1 hour from now
-    message: t('liveSessions.validation.endTimeAfterStart'),
+      endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString().slice(0, 16), // 2 hours from now
     },
   });
 
