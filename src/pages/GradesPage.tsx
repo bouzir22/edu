@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TrendingUp, TrendingDown, Award, BarChart3, Download, Filter, Calendar } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -10,6 +11,7 @@ import { format } from 'date-fns';
 export const GradesPage: React.FC = () => {
   const { user } = useAuthStore();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('all');
   const [selectedSemester, setSelectedSemester] = useState('current');
@@ -177,7 +179,7 @@ export const GradesPage: React.FC = () => {
             <Download className="mr-2" size={16} />
             {t('grades.export')}
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => navigate('/analytics')}>
             <BarChart3 className="mr-2" size={16} />
             {t('grades.analytics')}
           </Button>
