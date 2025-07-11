@@ -279,6 +279,65 @@
     "platform": "Open University of Sudan Educational Platform",
     "description": "Modern University Education Platform"
   },
+  "analytics": {
+    "title": "Analytics",
+    "description": {
+      "admin": "Comprehensive analytics for platform and user performance",
+      "instructor": "Student performance analytics and course insights",
+      "student": "Track your academic progress and performance"
+    },
+    "refresh": "Refresh",
+    "export": "Export",
+    "periods": {
+      "week": "Week",
+      "month": "Month",
+      "quarter": "Quarter",
+      "year": "Year"
+    },
+    "metrics": {
+      "totalUsers": "Total Users",
+      "activeCourses": "Active Courses",
+      "completionRate": "Completion Rate",
+      "avgGrade": "Average Grade",
+      "liveSessions": "Live Sessions",
+      "engagement": "Engagement"
+    },
+    "studentPerformance": "Student Performance",
+    "engagementAnalytics": "Engagement Analytics",
+    "topCourses": "Top Performing Courses",
+    "recentActivity": "Recent Activity",
+    "viewChart": "View Chart",
+    "viewDetails": "View Details",
+    "completed": "completed",
+    "avgGrade": "Avg Grade",
+    "passRate": "Pass Rate",
+    "completion": "Completion",
+    "sessions": "sessions",
+    "participants": "participants",
+    "minutes": "minutes",
+    "days": {
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday",
+      "sun": "Sunday"
+    },
+    "allMetrics": "All Metrics",
+    "enrollment": "Enrollment",
+    "rating": "Rating",
+    "course": "Course",
+    "students": "Students",
+    "trend": "Trend",
+    "activities": {
+      "courseCompletion": "{{user}} completed {{course}}",
+      "highScore": "{{user}} scored {{score}}% in {{course}}",
+      "sessionCompleted": "{{user}} completed {{course}} session with {{participants}} participants",
+      "newEnrollment": "{{user}} enrolled in {{course}}",
+      "examSubmitted": "{{user}} submitted {{course}} exam"
+    }
+  },
   "dashboard": {
     "welcome": "Welcome",
     "studentDashboard": "Student Dashboard",

@@ -9,6 +9,7 @@ import { LiveSessionsPage } from './pages/LiveSessionsPage';
 import { ExamsPage } from './pages/ExamsPage';
 import { GradesPage } from './pages/GradesPage';
 import { SchedulePage } from './pages/SchedulePage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 
@@ -100,6 +101,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SchedulePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/analytics" 
+            element={
+              <ProtectedRoute>
+                <AnalyticsPage />
               </ProtectedRoute>
             } 
           />

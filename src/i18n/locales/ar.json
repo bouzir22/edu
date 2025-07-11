@@ -307,5 +307,64 @@
     "shortName": "ج.ج",
     "platform": "منصة جامعة الجنوب التعليمية",
     "description": "منصة التعليم الجامعي الحديثة"
+  },
+  "analytics": {
+    "title": "التحليلات",
+    "description": {
+      "admin": "تحليلات شاملة لأداء المنصة والمستخدمين",
+      "instructor": "تحليلات أداء الطلاب ومقرراتك",
+      "student": "تتبع تقدمك الأكاديمي وأدائك"
+    },
+    "refresh": "تحديث",
+    "export": "تصدير",
+    "periods": {
+      "week": "أسبوع",
+      "month": "شهر",
+      "quarter": "ربع سنة",
+      "year": "سنة"
+    },
+    "metrics": {
+      "totalUsers": "إجمالي المستخدمين",
+      "activeCourses": "المقررات النشطة",
+      "completionRate": "معدل الإنجاز",
+      "avgGrade": "متوسط الدرجات",
+      "liveSessions": "الجلسات المباشرة",
+      "engagement": "مستوى التفاعل"
+    },
+    "studentPerformance": "أداء الطلاب",
+    "engagementAnalytics": "تحليلات التفاعل",
+    "topCourses": "أفضل المقررات",
+    "recentActivity": "النشاط الأخير",
+    "viewChart": "عرض الرسم البياني",
+    "viewDetails": "عرض التفاصيل",
+    "completed": "مكتمل",
+    "avgGrade": "متوسط الدرجات",
+    "passRate": "معدل النجاح",
+    "completion": "الإنجاز",
+    "sessions": "جلسات",
+    "participants": "مشاركين",
+    "minutes": "دقائق",
+    "days": {
+      "mon": "الاثنين",
+      "tue": "الثلاثاء",
+      "wed": "الأربعاء",
+      "thu": "الخميس",
+      "fri": "الجمعة",
+      "sat": "السبت",
+      "sun": "الأحد"
+    },
+    "allMetrics": "جميع المقاييس",
+    "enrollment": "التسجيل",
+    "rating": "التقييم",
+    "course": "المقرر",
+    "students": "الطلاب",
+    "trend": "الاتجاه",
+    "activities": {
+      "courseCompletion": "{{user}} أكمل مقرر {{course}}",
+      "highScore": "{{user}} حصل على {{score}}% في {{course}}",
+      "sessionCompleted": "{{user}} أنهى جلسة {{course}} مع {{participants}} مشارك",
+      "newEnrollment": "{{user}} سجل في مقرر {{course}}",
+      "examSubmitted": "{{user}} أرسل امتحان {{course}}"
+    }
   }
 }

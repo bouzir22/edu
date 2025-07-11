@@ -35,6 +35,7 @@ const getNavigationItems = (role: string) => {
       { name: 'navigation.exams', href: '/exams', icon: FileText },
       { name: 'navigation.students', href: '/students', icon: GraduationCap },
       { name: 'navigation.grades', href: '/grades', icon: BarChart3 },
+      { name: 'navigation.analytics', href: '/analytics', icon: BarChart3 },
     ],
     admin: [
       { name: 'navigation.users', href: '/users', icon: Users },
